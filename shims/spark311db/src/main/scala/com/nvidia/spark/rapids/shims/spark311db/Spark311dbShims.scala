@@ -20,6 +20,7 @@ import com.databricks.sql.execution.window.RunningWindowFunctionExec
 import com.nvidia.spark.rapids._
 import com.nvidia.spark.rapids.shims.spark311.Spark311Shims
 import org.apache.hadoop.fs.Path
+import org.apache.parquet.schema.MessageType
 
 import org.apache.spark.sql.rapids.shims.spark311db._
 import org.apache.spark.rdd.RDD
@@ -34,11 +35,13 @@ import org.apache.spark.sql.execution.adaptive.ShuffleQueryStageExec
 import org.apache.spark.sql.execution.exchange.{ENSURE_REQUIREMENTS, ShuffleExchangeExec}
 import org.apache.spark.sql.execution.datasources.{FilePartition, HadoopFsRelation, PartitionDirectory, PartitionedFile}
 import org.apache.spark.sql.execution.datasources.json.JsonFileFormat
+import org.apache.spark.sql.execution.datasources.parquet.ParquetFilters
 import org.apache.spark.sql.execution.exchange.ShuffleExchangeExec
 import org.apache.spark.sql.execution.joins.{BroadcastHashJoinExec, BroadcastNestedLoopJoinExec, HashJoin, SortMergeJoinExec}
 import org.apache.spark.sql.execution.joins.ShuffledHashJoinExec
 import org.apache.spark.sql.execution.python.{AggregateInPandasExec, ArrowEvalPythonExec, FlatMapGroupsInPandasExec, MapInPandasExec, WindowInPandasExec}
 import org.apache.spark.sql.execution.window.WindowExecBase
+import org.apache.spark.sql.internal.SQLConf
 import org.apache.spark.sql.rapids.GpuFileSourceScanExec
 import org.apache.spark.sql.rapids.execution.{GpuBroadcastExchangeExecBase, GpuBroadcastNestedLoopJoinExecBase, GpuShuffleExchangeExecBase}
 import org.apache.spark.sql.rapids.execution.python.{GpuPythonUDF, GpuWindowInPandasExecMetaBase}
@@ -46,6 +49,18 @@ import org.apache.spark.sql.rapids.execution.python.shims.spark311db.{GpuAggrega
 import org.apache.spark.sql.types._
 
 class Spark311dbShims extends Spark311Shims {
+
+  override def getParquetFilters(
+      schema: MessageType,
+      pushDownDate: Boolean,
+      pushDownTimestamp: Boolean,
+      pushDownDecimal: Boolean,
+      pushDownStartWith: Boolean,
+      pushDownInFilterThreshold: Int,
+      caseSensitive: Boolean,
+      datetimeRebaseMode: SQLConf.LegacyBehaviorPolicy.Value): ParquetFilters =
+    new ParquetFilters(schema, pushDownDate, pushDownTimestamp, pushDownDecimal, pushDownStartWith,
+      pushDownInFilterThreshold, caseSensitive, datetimeRebaseMode)
 
   override def getSparkShimVersion: ShimVersion = SparkShimServiceProvider.VERSION
 
@@ -171,32 +186,31 @@ class Spark311dbShims extends Spark311Shims {
         "Sort merge join, replacing with shuffled hash join",
         ExecChecks((TypeSig.commonCudfTypes + TypeSig.NULL + TypeSig.DECIMAL_64 + TypeSig.ARRAY +
             TypeSig.STRUCT + TypeSig.MAP)
-          .withPsNote(TypeEnum.ARRAY, "Cannot be used as join key")
-          .withPsNote(TypeEnum.STRUCT, "Cannot be used as join key")
-          .withPsNote(TypeEnum.MAP, "Cannot be used as join key")
           .nested(TypeSig.commonCudfTypes + TypeSig.NULL + TypeSig.STRUCT +
-          TypeSig.DECIMAL_64), TypeSig.all),
+            TypeSig.DECIMAL_64),
+        Map("leftKeys" -> TypeSig.joinKeyTypes,
+          "rightKeys" -> TypeSig.joinKeyTypes),
+          TypeSig.all),
         (join, conf, p, r) => new GpuSortMergeJoinMeta(join, conf, p, r)),
       GpuOverrides.exec[BroadcastHashJoinExec](
         "Implementation of join using broadcast data",
         ExecChecks((TypeSig.commonCudfTypes + TypeSig.NULL + TypeSig.DECIMAL_64 + TypeSig.ARRAY +
             TypeSig.STRUCT + TypeSig.MAP)
-          .withPsNote(TypeEnum.ARRAY, "Cannot be used as join key")
-          .withPsNote(TypeEnum.STRUCT, "Cannot be used as join key")
-          .withPsNote(TypeEnum.MAP, "Cannot be used as join key")
           .nested(TypeSig.commonCudfTypes + TypeSig.NULL + TypeSig.STRUCT +
-          TypeSig.DECIMAL_64)
-          , TypeSig.all),
+          TypeSig.DECIMAL_64),
+          Map("leftKeys" -> TypeSig.joinKeyTypes,
+            "rightKeys" -> TypeSig.joinKeyTypes),
+          TypeSig.all),
         (join, conf, p, r) => new GpuBroadcastHashJoinMeta(join, conf, p, r)),
       GpuOverrides.exec[ShuffledHashJoinExec](
         "Implementation of join using hashed shuffled data",
          ExecChecks((TypeSig.commonCudfTypes + TypeSig.NULL + TypeSig.DECIMAL_64 + TypeSig.ARRAY +
             TypeSig.STRUCT + TypeSig.MAP)
-          .withPsNote(TypeEnum.ARRAY, "Cannot be used as join key")
-          .withPsNote(TypeEnum.STRUCT, "Cannot be used as join key")
-          .withPsNote(TypeEnum.MAP, "Cannot be used as join key")
           .nested(TypeSig.commonCudfTypes + TypeSig.NULL +
-          TypeSig.DECIMAL_64), TypeSig.all),
+          TypeSig.DECIMAL_64),
+           Map("leftKeys" -> TypeSig.joinKeyTypes,
+             "rightKeys" -> TypeSig.joinKeyTypes),
+           TypeSig.all),
         (join, conf, p, r) => new GpuShuffledHashJoinMeta(join, conf, p, r)),
       GpuOverrides.exec[ArrowEvalPythonExec](
         "The backend of the Scalar Pandas UDFs. Accelerates the data transfer between the" +

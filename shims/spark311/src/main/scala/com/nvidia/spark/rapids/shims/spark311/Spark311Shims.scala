@@ -147,13 +147,22 @@ class Spark311Shims extends Spark301Shims {
 
         // calendarChecks are the same
 
-        override val arrayChecks: TypeSig = none
+        override val arrayChecks: TypeSig =
+          ARRAY.nested(commonCudfTypes + DECIMAL_64 + NULL + ARRAY + BINARY + STRUCT) +
+              psNote(TypeEnum.ARRAY, "The array's child type must also support being cast to " +
+                  "the desired child type")
         override val sparkArraySig: TypeSig = ARRAY.nested(all)
 
-        override val mapChecks: TypeSig = none
+        override val mapChecks: TypeSig =
+          MAP.nested(commonCudfTypes + DECIMAL_64 + NULL + ARRAY + BINARY + STRUCT + MAP) +
+              psNote(TypeEnum.MAP, "the map's key and value must also support being cast to the " +
+                  "desired child types")
         override val sparkMapSig: TypeSig = MAP.nested(all)
 
-        override val structChecks: TypeSig = none
+        override val structChecks: TypeSig =
+          STRUCT.nested(commonCudfTypes + DECIMAL_64 + NULL + ARRAY + BINARY + STRUCT) +
+            psNote(TypeEnum.STRUCT, "the struct's children must also support being cast to the " +
+                "desired child type(s)")
         override val sparkStructSig: TypeSig = STRUCT.nested(all)
 
         override val udtChecks: TypeSig = none
@@ -384,32 +393,31 @@ class Spark311Shims extends Spark301Shims {
         "Sort merge join, replacing with shuffled hash join",
         ExecChecks((TypeSig.commonCudfTypes + TypeSig.NULL + TypeSig.DECIMAL_64 + TypeSig.ARRAY +
             TypeSig.STRUCT + TypeSig.MAP)
-          .withPsNote(TypeEnum.ARRAY, "Cannot be used as join key")
-          .withPsNote(TypeEnum.STRUCT, "Cannot be used as join key")
-          .withPsNote(TypeEnum.MAP, "Cannot be used as join key")
           .nested(TypeSig.commonCudfTypes + TypeSig.NULL + TypeSig.STRUCT +
-          TypeSig.DECIMAL_64), TypeSig.all),
+          TypeSig.DECIMAL_64),
+          Map("leftKeys" -> TypeSig.joinKeyTypes,
+            "rightKeys" -> TypeSig.joinKeyTypes),
+          TypeSig.all),
         (join, conf, p, r) => new GpuSortMergeJoinMeta(join, conf, p, r)),
       GpuOverrides.exec[BroadcastHashJoinExec](
         "Implementation of join using broadcast data",
         ExecChecks((TypeSig.commonCudfTypes + TypeSig.NULL + TypeSig.DECIMAL_64 + TypeSig.ARRAY +
             TypeSig.STRUCT + TypeSig.MAP)
-          .withPsNote(TypeEnum.ARRAY, "Cannot be used as join key")
-          .withPsNote(TypeEnum.STRUCT, "Cannot be used as join key")
-          .withPsNote(TypeEnum.MAP, "Cannot be used as join key")
           .nested(TypeSig.commonCudfTypes + TypeSig.NULL + TypeSig.STRUCT +
-          TypeSig.DECIMAL_64)
-          , TypeSig.all),
+          TypeSig.DECIMAL_64),
+          Map("leftKeys" -> TypeSig.joinKeyTypes,
+            "rightKeys" -> TypeSig.joinKeyTypes),
+          TypeSig.all),
         (join, conf, p, r) => new GpuBroadcastHashJoinMeta(join, conf, p, r)),
       GpuOverrides.exec[ShuffledHashJoinExec](
         "Implementation of join using hashed shuffled data",
         ExecChecks((TypeSig.commonCudfTypes + TypeSig.NULL + TypeSig.DECIMAL_64 + TypeSig.ARRAY +
             TypeSig.STRUCT + TypeSig.MAP)
-          .withPsNote(TypeEnum.ARRAY, "Cannot be used as join key")
-          .withPsNote(TypeEnum.STRUCT, "Cannot be used as join key")
-          .withPsNote(TypeEnum.MAP, "Cannot be used as join key")
           .nested(TypeSig.commonCudfTypes + TypeSig.NULL +
-          TypeSig.DECIMAL_64), TypeSig.all),
+          TypeSig.DECIMAL_64),
+          Map("leftKeys" -> TypeSig.joinKeyTypes,
+            "rightKeys" -> TypeSig.joinKeyTypes),
+          TypeSig.all),
         (join, conf, p, r) => new GpuShuffledHashJoinMeta(join, conf, p, r))
     ).map(r => (r.getClassFor.asSubclass(classOf[SparkPlan]), r))
   }

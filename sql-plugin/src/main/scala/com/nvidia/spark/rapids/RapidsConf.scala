@@ -330,7 +330,7 @@ object RapidsConf {
       s"configured via $RMM_ALLOC_MAX_FRACTION_KEY.")
     .doubleConf
     .checkValue(v => v >= 0 && v <= 1, "The fraction value must be in [0, 1].")
-    .createWithDefault(0.9)
+    .createWithDefault(1)
 
   val RMM_ALLOC_MAX_FRACTION = conf(RMM_ALLOC_MAX_FRACTION_KEY)
     .doc("The fraction of total GPU memory that limits the maximum size of the RMM pool. " +
@@ -671,6 +671,12 @@ object RapidsConf {
       .doc("When set to true left anti joins are enabled on the GPU")
       .booleanConf
       .createWithDefault(true)
+
+  val ENABLE_PROJECT_AST = conf("spark.rapids.sql.projectAstEnabled")
+      .doc("Enable project operations to use cudf AST expressions when possible.")
+      .internal()
+      .booleanConf
+      .createWithDefault(false)
 
   // FILE FORMATS
   val ENABLE_PARQUET = conf("spark.rapids.sql.format.parquet.enabled")
@@ -1530,6 +1536,8 @@ class RapidsConf(conf: Map[String, String]) extends Logging {
   lazy val isCsvDoubleReadEnabled: Boolean = get(ENABLE_READ_CSV_DOUBLES)
 
   lazy val isCastDecimalToStringEnabled: Boolean = get(ENABLE_CAST_DECIMAL_TO_STRING)
+
+  lazy val isProjectAstEnabled: Boolean = get(ENABLE_PROJECT_AST)
 
   lazy val isParquetEnabled: Boolean = get(ENABLE_PARQUET)
 
