@@ -21,17 +21,17 @@ import java.io.{IOException, ObjectInputStream, ObjectOutputStream}
 import scala.collection.mutable
 
 import ai.rapids.cudf.{JCudfSerialization, NvtxColor, NvtxRange}
-import ai.rapids.cudf.ast
 import com.nvidia.spark.rapids.{Arm, GpuBindReferences, GpuBuildLeft, GpuColumnVector, GpuExec, GpuExpression, GpuMetric, GpuSemaphore, LazySpillableColumnarBatch, MetricsLevel}
 import com.nvidia.spark.rapids.RapidsBuffer.SpillCallback
 import com.nvidia.spark.rapids.RapidsPluginImplicits._
+import com.nvidia.spark.rapids.shims.sql.ShimBinaryExecNode
 
 import org.apache.spark.{Dependency, NarrowDependency, Partition, SparkContext, TaskContext}
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.expressions.{Attribute, Expression}
 import org.apache.spark.sql.catalyst.plans.Cross
-import org.apache.spark.sql.execution.{BinaryExecNode, ExplainUtils, SparkPlan}
+import org.apache.spark.sql.execution.{ExplainUtils, SparkPlan}
 import org.apache.spark.sql.rapids.execution.GpuBroadcastNestedLoopJoinExecBase
 import org.apache.spark.sql.types.DataType
 import org.apache.spark.sql.vectorized.ColumnarBatch
@@ -115,6 +115,7 @@ class GpuCartesianRDD(
     sc: SparkContext,
     boundCondition: Option[GpuExpression],
     numFirstTableColumns: Int,
+    streamAttributes: Seq[Attribute],
     spillCallback: SpillCallback,
     targetSize: Long,
     joinTime: GpuMetric,
@@ -186,9 +187,13 @@ class GpuCartesianRDD(
       }
 
       GpuBroadcastNestedLoopJoinExecBase.nestedLoopJoin(
-        Cross, numFirstTableColumns, batch, streamIterator, targetSize, GpuBuildLeft,
-        boundCondition, spillCallback, numOutputRows, joinOutputRows, numOutputBatches,
-        joinTime, totalTime)
+        Cross, GpuBuildLeft, numFirstTableColumns, batch, streamIterator, streamAttributes,
+        targetSize, boundCondition, spillCallback,
+        numOutputRows = numOutputRows,
+        joinOutputRows = joinOutputRows,
+        numOutputBatches = numOutputBatches,
+        joinTime = joinTime,
+        totalTime = totalTime)
     }
   }
 
@@ -212,7 +217,7 @@ case class GpuCartesianProductExec(
     left: SparkPlan,
     right: SparkPlan,
     condition: Option[Expression],
-    targetSizeBytes: Long) extends BinaryExecNode with GpuExec {
+    targetSizeBytes: Long) extends ShimBinaryExecNode with GpuExec {
 
   import GpuMetric._
 
@@ -273,6 +278,7 @@ case class GpuCartesianProductExec(
       new GpuCartesianRDD(sparkContext,
         boundCondition,
         numFirstTableColumns,
+        right.output,
         spillCallback,
         targetSizeBytes,
         joinTime,
