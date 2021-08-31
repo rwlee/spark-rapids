@@ -3174,8 +3174,8 @@ object GpuOverrides {
       (shuffle, conf, p, r) => new GpuShuffleMeta(shuffle, conf, p, r)),
     exec[UnionExec](
       "The backend for the union operator",
-      ExecChecks(TypeSig.commonCudfTypes + TypeSig.NULL + TypeSig.DECIMAL_64 + TypeSig.MAP + TypeSig.ARRAY +
-        TypeSig.STRUCT.nested(TypeSig.commonCudfTypes + TypeSig.NULL +
+      ExecChecks(TypeSig.commonCudfTypes + TypeSig.NULL + TypeSig.DECIMAL_64 + TypeSig.MAP +
+        TypeSig.ARRAY + TypeSig.STRUCT.nested(TypeSig.commonCudfTypes + TypeSig.NULL +
           TypeSig.DECIMAL_64 + TypeSig.STRUCT + TypeSig.MAP + TypeSig.ARRAY)
         .withPsNote(TypeEnum.STRUCT,
           "unionByName will not optionally impute nulls for missing struct fields " +
