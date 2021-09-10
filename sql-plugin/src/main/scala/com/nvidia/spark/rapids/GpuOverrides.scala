@@ -942,7 +942,8 @@ object GpuOverrides {
       ExprChecks.windowOnly(TypeSig.INT, TypeSig.INT,
         repeatingParamCheck =
           Some(RepeatingParamCheck("ordering",
-            TypeSig.commonCudfTypes + TypeSig.DECIMAL_64 + TypeSig.NULL,
+            TypeSig.commonCudfTypes + TypeSig.DECIMAL_64 + TypeSig.NULL +
+              TypeSig.STRUCT.nested(TypeSig.commonCudfTypes + TypeSig.DECIMAL_64 + TypeSig.NULL),
             TypeSig.all))),
       (rank, conf, p, r) => new ExprMeta[Rank](rank, conf, p, r) {
         override def convertToGpu(): GpuExpression = GpuRank(childExprs.map(_.convertToGpu()))
@@ -952,7 +953,8 @@ object GpuOverrides {
       ExprChecks.windowOnly(TypeSig.INT, TypeSig.INT,
         repeatingParamCheck =
           Some(RepeatingParamCheck("ordering",
-            TypeSig.commonCudfTypes + TypeSig.DECIMAL_64 + TypeSig.NULL,
+            TypeSig.commonCudfTypes + TypeSig.DECIMAL_64 + TypeSig.NULL +
+              TypeSig.STRUCT.nested(TypeSig.commonCudfTypes + TypeSig.DECIMAL_64 + TypeSig.NULL),
             TypeSig.all))),
       (denseRank, conf, p, r) => new ExprMeta[DenseRank](denseRank, conf, p, r) {
         override def convertToGpu(): GpuExpression = GpuDenseRank(childExprs.map(_.convertToGpu()))
