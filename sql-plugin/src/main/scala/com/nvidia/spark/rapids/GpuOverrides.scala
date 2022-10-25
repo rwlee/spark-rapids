@@ -931,9 +931,9 @@ object GpuOverrides extends Logging {
               }
               expr.asInstanceOf[LiteralExprMeta].withNewLiteral(Literal(value, newType))
             // Avoid unapply for PromotePrecision and Cast because it changes between Spark versions
-            case p: PromotePrecision if p.child.isInstanceOf[CastBase] &&
+            case p: PromotePrecision if p.child.isInstanceOf[Cast] &&
                 p.child.dataType.isInstanceOf[DecimalType] =>
-              val c = p.child.asInstanceOf[CastBase]
+              val c = p.child.asInstanceOf[Cast]
               val to = c.dataType.asInstanceOf[DecimalType]
               val fromType = DecimalUtil.optionallyAsDecimalType(c.child.dataType)
               fromType match {
