@@ -116,6 +116,8 @@ trait SparkShims {
 
   def isEmptyRelation(relation: Any): Boolean
 
+  def ignoreTimeZoneCastBase(cast: Expression): Expression
+
   def broadcastModeTransform(mode: BroadcastMode, toArray: Array[InternalRow]): Any
 
   /**
@@ -168,6 +170,12 @@ trait SparkShims {
    * 'AnsiCast' is removed from Spark 3.4.0, so need to handle it separately.
    */
   def ansiCastRule: ExprRule[_ <: Expression]
+
+  /**
+   * `CheckOverflow` and `PromotePrecision` both removed from Spark 3.4.0, so need to handle it separately.
+   */
+  def checkOverflowRule: ExprRule[_ <: Expression]
+  def promotePrecisionRule: ExprRule[_ <: Expression]
 
   /**
    * Determine if the Spark version allows the supportsColumnar flag to be overridden

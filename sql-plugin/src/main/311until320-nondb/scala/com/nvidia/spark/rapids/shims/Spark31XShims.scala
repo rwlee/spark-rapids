@@ -48,6 +48,13 @@ import org.apache.spark.sql.rapids.execution.GpuCustomShuffleReaderExec
 import org.apache.spark.sql.rapids.execution.python._
 import org.apache.spark.sql.types._
 
+import org.apache.spark.sql.catalyst.expressions.{AnsiCast, Expression}
+import org.apache.spark.sql.catalyst.expressions.{CastBase, CheckOverflow, Divide, Literal, Multiply, PromotePrecision}
+import org.apache.spark.sql.rapids.{GpuDecimalDivide, GpuDecimalMultiply}
+import org.apache.spark.sql.types.{Decimal, DecimalType}
+import org.apache.spark.sql.internal.SQLConf
+import ai.rapids.cudf.{DType}
+
 // 31x nondb shims, used by 311cdh and 31x
 abstract class Spark31XShims extends SparkShims with Spark31Xuntil33XShims with Logging {
   override def parquetRebaseReadKey: String =
@@ -190,6 +197,14 @@ abstract class Spark31XShims extends SparkShims with Spark31Xuntil33XShims with 
     case _ => false
   }
 
+  override def ignoreTimeZoneCastBase(e: Expression): Expression = e match {
+    case c: CastBase if c.timeZoneId.nonEmpty && !c.needsTimeZone =>
+      c.withTimeZone(null)
+    case c: GpuCast if c.timeZoneId.nonEmpty && !c.needsTimeZone =>
+      c.withTimeZone(null)
+    case _ => e
+  }
+
   override def ansiCastRule: ExprRule[_ <: Expression] = {
     GpuOverrides.expr[AnsiCast](
       "Convert a column of one type of data into another type",
@@ -245,6 +260,118 @@ abstract class Spark31XShims extends SparkShims with Spark31Xuntil33XShims with 
         parent = p, rule = r, doFloatToIntCheck = true, stringToAnsiDate = false))
   }
 
+  override def checkOverflowRule: ExprRule[_ <: Expression] = {
+
+    GpuOverrides.expr[CheckOverflow](
+      "CheckOverflow after arithmetic operations between DecimalType data",
+      ExprChecks.unaryProjectInputMatchesOutput(TypeSig.DECIMAL_128,
+        TypeSig.DECIMAL_128),
+      (a, conf, p, r) => new ExprMeta[CheckOverflow](a, conf, p, r) {
+        private[this] def extractOrigParam(expr: BaseExprMeta[_]): BaseExprMeta[_] =
+          expr.wrapped match {
+            case lit: Literal if lit.dataType.isInstanceOf[DecimalType] =>
+              // Lets figure out if we can make the Literal value smaller
+              val (newType, value) = lit.value match {
+                case null =>
+                  (DecimalType(0, 0), null)
+                case dec: Decimal =>
+                  val stripped = Decimal(dec.toJavaBigDecimal.stripTrailingZeros())
+                  val p = stripped.precision
+                  val s = stripped.scale
+                  val t = if (s < 0 && !SQLConf.get.allowNegativeScaleOfDecimalEnabled) {
+                    // need to adjust to avoid errors about negative scale
+                    DecimalType(p - s, 0)
+                  } else {
+                    DecimalType(p, s)
+                  }
+                  (t, stripped)
+                case other =>
+                  throw new IllegalArgumentException(s"Unexpected decimal literal value $other")
+              }
+              expr.asInstanceOf[LiteralExprMeta].withNewLiteral(Literal(value, newType))
+            // Avoid unapply for PromotePrecision and Cast because it changes between Spark versions
+            case p: PromotePrecision if p.child.isInstanceOf[CastBase] &&
+                p.child.dataType.isInstanceOf[DecimalType] =>
+              val c = p.child.asInstanceOf[CastBase]
+              val to = c.dataType.asInstanceOf[DecimalType]
+              val fromType = DecimalUtil.optionallyAsDecimalType(c.child.dataType)
+              fromType match {
+                case Some(from) =>
+                  val minScale = math.min(from.scale, to.scale)
+                  val fromWhole = from.precision - from.scale
+                  val toWhole = to.precision - to.scale
+                  val minWhole = if (to.scale < from.scale) {
+                    // If the scale is getting smaller in the worst case we need an
+                    // extra whole part to handle rounding up.
+                    math.min(fromWhole + 1, toWhole)
+                  } else {
+                    math.min(fromWhole, toWhole)
+                  }
+                  val newToType = DecimalType(minWhole + minScale, minScale)
+                  if (newToType == from) {
+                    // We can remove the cast totally
+                    val castExpr = expr.childExprs.head
+                    castExpr.childExprs.head
+                  } else if (newToType == to) {
+                    // The cast is already ideal
+                    expr
+                  } else {
+                    val castExpr = expr.childExprs.head.asInstanceOf[CastExprMeta[_]]
+                    castExpr.withToTypeOverride(newToType)
+                  }
+                case _ =>
+                  expr
+              }
+            case _ => expr
+          }
+        private[this] lazy val binExpr = childExprs.head
+        private[this] lazy val lhs = extractOrigParam(binExpr.childExprs.head)
+        private[this] lazy val rhs = extractOrigParam(binExpr.childExprs(1))
+        private[this] lazy val lhsDecimalType =
+          DecimalUtil.asDecimalType(lhs.wrapped.asInstanceOf[Expression].dataType)
+        private[this] lazy val rhsDecimalType =
+          DecimalUtil.asDecimalType(rhs.wrapped.asInstanceOf[Expression].dataType)
+
+        override def convertToGpu(): GpuExpression = {
+          // Prior to Spark 3.4.0
+          // Division and Multiplication of Decimal types is a little odd. Spark will cast the
+          // inputs to a common wider value where the scale is the max of the two input scales,
+          // and the precision is max of the two input non-scale portions + the new scale. Then it
+          // will do the divide or multiply as a BigDecimal value but lie about the return type.
+          // Finally here in CheckOverflow it will reset the scale and check the precision so that
+          // Spark knows it fits in the final desired result.
+          // Here we try to strip out the extra casts, etc to get to as close to the original
+          // query as possible. This lets us then calculate what CUDF needs to get the correct
+          // answer, which in some cases is a lot smaller.
+
+          a.child match {
+            case _: Divide =>
+              // GpuDecimalDivide includes the overflow check in it.
+              GpuDecimalDivide(lhs.convertToGpu(), rhs.convertToGpu(), wrapped.dataType)
+            case _: Multiply =>
+              // GpuDecimal*Multiply includes the overflow check in it
+              val intermediatePrecision =
+                GpuDecimalMultiply.nonRoundedIntermediatePrecision(lhsDecimalType,
+                  rhsDecimalType, a.dataType)
+              GpuDecimalMultiply(lhs.convertToGpu(), rhs.convertToGpu(), wrapped.dataType,
+                useLongMultiply = intermediatePrecision > DType.DECIMAL128_MAX_PRECISION)
+            case _ =>
+              GpuCheckOverflow(childExprs.head.convertToGpu(),
+                wrapped.dataType, wrapped.nullOnOverflow)
+          }
+        }
+      })
+  }
+
+  override def promotePrecisionRule: ExprRule[_ <: Expression] = {
+    GpuOverrides.expr[PromotePrecision](
+      "PromotePrecision before arithmetic operations between DecimalType data",
+      ExprChecks.unaryProjectInputMatchesOutput(TypeSig.DECIMAL_128,
+        TypeSig.DECIMAL_128),
+      (a, conf, p, r) => new UnaryExprMeta[PromotePrecision](a, conf, p, r) {
+        override def convertToGpu(child: Expression): GpuExpression = GpuPromotePrecision(child)
+      })
+  }
   override def getExprs: Map[Class[_ <: Expression], ExprRule[_ <: Expression]] = Seq(
     GpuOverrides.expr[Cast](
         "Convert a column of one type of data into another type",
