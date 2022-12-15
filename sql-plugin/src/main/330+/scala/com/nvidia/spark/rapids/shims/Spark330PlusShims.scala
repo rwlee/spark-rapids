@@ -20,9 +20,10 @@ import com.nvidia.spark.rapids._
 import org.apache.parquet.schema.MessageType
 
 import org.apache.spark.sql.catalyst.expressions._
-import org.apache.spark.sql.execution.SparkPlan
+import org.apache.spark.sql.execution.{FileSourceScanExec, SparkPlan}
 import org.apache.spark.sql.execution.datasources.DataSourceUtils
 import org.apache.spark.sql.execution.datasources.parquet.ParquetFilters
+import org.apache.spark.sql.execution.datasources.v2.BatchScanExec
 
 trait Spark330PlusShims extends Spark321PlusShims {
 
