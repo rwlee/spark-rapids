@@ -82,7 +82,7 @@ def _get_arithmetic_overflow_error_message(tail):
     err_exp = 'java.lang.ArithmeticException' if is_before_spark_330() \
         else 'org.apache.spark.SparkArithmeticException'
     err_mess = (': ' if is_before_spark_340() and not \
-        is_databricks113_or_later()  else ': ') + tail
+        is_databricks113_or_later()  else ': [ARITHMETIC_OVERFLOW] ') + tail
     return err_exp + err_mess
 
 @pytest.mark.parametrize('data_gen', _arith_data_gens, ids=idfn)
@@ -173,7 +173,7 @@ def test_multiplication_ansi_overflow():
     assert_gpu_and_cpu_error(
         lambda spark : unary_op_df(spark, DecimalGen(38, 0)).selectExpr("a * " + "9"*38 + " as ret").collect(),
         ansi_enabled_conf,
-        error_message='ArithmeticException') # TODO NUMERIC_VALUE_OUT_OF_RANGE
+        error_message=_get_arithmetic_overflow_error_message('TODO')) # TODO NUMERIC_VALUE_OUT_OF_RANGE
 
 @pytest.mark.parametrize('lhs', [byte_gen, short_gen, int_gen, long_gen, DecimalGen(6, 5), DecimalGen(6, 4), DecimalGen(5, 4), DecimalGen(5, 3),
     DecimalGen(4, 2), DecimalGen(3, -2), DecimalGen(16, 7), DecimalGen(19, 0),
@@ -432,8 +432,7 @@ def test_abs_ansi_overflow(data_type, value):
     assert_gpu_and_cpu_error(
             df_fun=lambda spark: _get_overflow_df(spark, [value], data_type, 'abs(a)').collect(),
             conf=ansi_enabled_conf,
-            error_message='java.lang.ArithmeticException' if is_before_spark_330() else \
-                          'org.apache.spark.SparkArithmeticException')
+            error_message=_get_arithmetic_overflow_error_message('TODO'))
 
 @approximate_float
 @pytest.mark.parametrize('data_gen', double_gens, ids=idfn)
@@ -913,7 +912,7 @@ def test_div_overflow_exception_when_ansi(expr, ansi_enabled):
         assert_gpu_and_cpu_error(
             df_fun=lambda spark: _get_div_overflow_df(spark, expr).collect(),
             conf=ansi_conf,
-            error_message=_get_arithmetic_overflow_error_message('[ARITHMETIC_OVERFLOW] Overflow in integral divide'))
+            error_message=_get_arithmetic_overflow_error_message('Overflow in integral divide'))
     else:
         assert_gpu_and_cpu_are_equal_collect(
             func=lambda spark: _get_div_overflow_df(spark, expr),
@@ -954,7 +953,7 @@ def test_add_overflow_with_ansi_enabled(data, tp, expr):
         assert_gpu_and_cpu_error(
             lambda spark: _get_overflow_df(spark, data, tp, expr).collect(),
             conf=ansi_enabled_conf,
-            error_message='java.lang.ArithmeticException' if is_before_spark_330() else 'SparkArithmeticException')
+            error_message=_get_arithmetic_overflow_error_message('TODO'))
     elif isinstance(tp, DecimalType):
         assert_gpu_and_cpu_error(
             lambda spark: _get_overflow_df(spark, data, tp, expr).collect(),
@@ -983,7 +982,7 @@ def test_subtraction_overflow_with_ansi_enabled(data, tp, expr):
         assert_gpu_and_cpu_error(
             lambda spark: _get_overflow_df(spark, data, tp, expr).collect(),
             conf=ansi_enabled_conf,
-            error_message='java.lang.ArithmeticException' if is_before_spark_330() else 'SparkArithmeticException')
+            error_message=_get_arithmetic_overflow_error_message('TODO'))
     elif isinstance(tp, DecimalType):
         assert_gpu_and_cpu_error(
             lambda spark: _get_overflow_df(spark, data, tp, expr).collect(),
@@ -1014,7 +1013,7 @@ def test_unary_minus_ansi_overflow_day_time_interval(ansi_enabled):
     assert_gpu_and_cpu_error(
         df_fun=lambda spark: _get_overflow_df(spark, [timedelta(microseconds=LONG_MIN)], DayTimeIntervalType(), '-a').collect(),
         conf={'spark.sql.ansi.enabled': ansi_enabled},
-        error_message='SparkArithmeticException')
+        error_message=_get_arithmetic_overflow_error_message('TODO'))
 
 @pytest.mark.skipif(is_before_spark_330(), reason='DayTimeInterval is not supported before Pyspark 3.3.0')
 @pytest.mark.parametrize('ansi_enabled', ['false', 'true'])
@@ -1035,7 +1034,7 @@ def test_abs_ansi_overflow_day_time_interval(ansi_enabled):
     assert_gpu_and_cpu_error(
         df_fun=lambda spark: _get_overflow_df(spark, [timedelta(microseconds=LONG_MIN)], DayTimeIntervalType(), 'abs(a)').collect(),
         conf={'spark.sql.ansi.enabled': ansi_enabled},
-        error_message='SparkArithmeticException')
+        error_message=_get_arithmetic_overflow_error_message('TODO'))
 
 @pytest.mark.skipif(is_before_spark_330(), reason='DayTimeInterval is not supported before Pyspark 3.3.0')
 @pytest.mark.parametrize('ansi_enabled', ['false', 'true'])
@@ -1055,7 +1054,7 @@ def test_add_overflow_with_ansi_enabled_day_time_interval(ansi_enabled):
             StructType([StructField('a', DayTimeIntervalType()), StructField('b', DayTimeIntervalType())])
         ).selectExpr('a + b').collect(),
         conf={'spark.sql.ansi.enabled': ansi_enabled},
-        error_message='SparkArithmeticException')
+        error_message=_get_arithmetic_overflow_error_message('TODO'))
 
 @pytest.mark.skipif(is_before_spark_330(), reason='DayTimeInterval is not supported before Pyspark 3.3.0')
 @pytest.mark.parametrize('ansi_enabled', ['false', 'true'])
@@ -1075,7 +1074,7 @@ def test_subtraction_overflow_with_ansi_enabled_day_time_interval(ansi_enabled):
             StructType([StructField('a', DayTimeIntervalType()), StructField('b', DayTimeIntervalType())])
         ).selectExpr('a - b').collect(),
         conf={'spark.sql.ansi.enabled': ansi_enabled},
-        error_message='SparkArithmeticException')
+        error_message=_get_arithmetic_overflow_error_message('TODO'))
 
 @pytest.mark.skipif(is_before_spark_330(), reason='DayTimeInterval is not supported before Pyspark 3.3.0')
 def test_unary_positive_day_time_interval():
@@ -1135,7 +1134,7 @@ def test_day_time_interval_division_overflow(data_type, value_pair):
     assert_gpu_and_cpu_error(
         df_fun=lambda spark: _get_overflow_df_2cols(spark, [DayTimeIntervalType(), data_type], value_pair, 'a / b').collect(),
         conf={},
-        error_message=_get_arithmetic_overflow_error_message('[ARITHMETIC_OVERFLOW] Overflow in integral divide'))
+        error_message=_get_arithmetic_overflow_error_message('Overflow in integral divide'))
 
 @pytest.mark.skipif(is_before_spark_330(), reason='DayTimeInterval is not supported before Pyspark 3.3.0')
 @pytest.mark.parametrize('data_type,value_pair', [
@@ -1148,7 +1147,7 @@ def test_day_time_interval_division_round_overflow(data_type, value_pair):
     assert_gpu_and_cpu_error(
         df_fun=lambda spark: _get_overflow_df_2cols(spark, [DayTimeIntervalType(), data_type], value_pair, 'a / b').collect(),
         conf={},
-        error_message=_get_arithmetic_overflow_error_message('[ARITHMETIC_OVERFLOW] Overflow in integral divide'))
+        error_message=_get_arithmetic_overflow_error_message('Overflow in integral divide'))
 
 @pytest.mark.skipif(is_before_spark_330(), reason='DayTimeInterval is not supported before Pyspark 3.3.0')
 @pytest.mark.parametrize('data_type,value_pair', [
@@ -1203,4 +1202,4 @@ def test_day_time_interval_division_nan(data_type, value_pair):
     assert_gpu_and_cpu_error(
         df_fun=lambda spark: _get_overflow_df_2cols(spark, [DayTimeIntervalType(), data_type], value_pair, 'a / b').collect(),
         conf={},
-        error_message='java.lang.ArithmeticException')
+        error_message=_get_arithmetic_overflow_error_message('TODO'))
