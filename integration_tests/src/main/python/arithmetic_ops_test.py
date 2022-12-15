@@ -78,6 +78,13 @@ def _get_overflow_df(spark, data, data_type, expr):
         StructType([StructField('a', data_type)])
     ).selectExpr(expr)
 
+def _get_arithmetic_overflow_error_message():
+    err_exp = 'java.lang.ArithmeticException' if is_before_spark_330() \
+        else 'org.apache.spark.SparkArithmeticException'
+    err_mess = ': Overflow in integral divide' if is_before_spark_340() and not \
+        is_databricks113_or_later()   else ': [ARITHMETIC_OVERFLOW] Overflow in integral divide'
+    return err_exp + err_mess
+
 @pytest.mark.parametrize('data_gen', _arith_data_gens, ids=idfn)
 def test_addition(data_gen):
     data_type = data_gen.data_type
@@ -904,15 +911,11 @@ div_overflow_exprs = [
 @pytest.mark.parametrize('ansi_enabled', ['false', 'true'])
 def test_div_overflow_exception_when_ansi(expr, ansi_enabled):
     ansi_conf = {'spark.sql.ansi.enabled': ansi_enabled}
-    err_exp = 'java.lang.ArithmeticException' if is_before_spark_330() \
-        else 'org.apache.spark.SparkArithmeticException'
-    err_mess = ': Overflow in integral divide' if is_before_spark_340() \
-        else ': [ARITHMETIC_OVERFLOW] Overflow in integral divide'
     if ansi_enabled == 'true':
         assert_gpu_and_cpu_error(
             df_fun=lambda spark: _get_div_overflow_df(spark, expr).collect(),
             conf=ansi_conf,
-            error_message=err_exp + err_mess)
+            error_message=_get_arithmetic_overflow_error_message())
     else:
         assert_gpu_and_cpu_are_equal_collect(
             func=lambda spark: _get_div_overflow_df(spark, expr),
@@ -1134,7 +1137,7 @@ def test_day_time_interval_division_overflow(data_type, value_pair):
     assert_gpu_and_cpu_error(
         df_fun=lambda spark: _get_overflow_df_2cols(spark, [DayTimeIntervalType(), data_type], value_pair, 'a / b').collect(),
         conf={},
-        error_message='SparkArithmeticException: Overflow in integral divide.')
+        error_message=_get_arithmetic_overflow_error_message())
 
 @pytest.mark.skipif(is_before_spark_330(), reason='DayTimeInterval is not supported before Pyspark 3.3.0')
 @pytest.mark.parametrize('data_type,value_pair', [
