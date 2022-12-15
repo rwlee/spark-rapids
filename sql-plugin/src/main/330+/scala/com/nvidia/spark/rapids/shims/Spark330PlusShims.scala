@@ -16,6 +16,15 @@
 
 package com.nvidia.spark.rapids.shims
 
+import com.nvidia.spark.rapids._
+import org.apache.parquet.schema.MessageType
+
+import org.apache.spark.sql.catalyst.expressions._
+import org.apache.spark.sql.execution.SparkPlan
+import org.apache.spark.sql.execution.datasources.{DataSourceUtils, FilePartition, FileScanRDD, PartitionedFile}
+import org.apache.spark.sql.execution.datasources.parquet.ParquetFilters
+import org.apache.spark.sql.rapids._
+
 trait Spark330PlusShims extends Spark321PlusShims {
 
   override def getParquetFilters(

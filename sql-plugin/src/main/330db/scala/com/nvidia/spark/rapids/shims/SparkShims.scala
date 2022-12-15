@@ -17,13 +17,9 @@
 package com.nvidia.spark.rapids.shims
 
 import com.nvidia.spark.rapids._
-import org.apache.parquet.schema.MessageType
 
 import org.apache.spark.sql.catalyst.expressions._
 import org.apache.spark.sql.catalyst.trees.TreePattern._
-import org.apache.spark.sql.execution.SparkPlan
-import org.apache.spark.sql.execution.datasources._
-import org.apache.spark.sql.execution.datasources.parquet.ParquetFilters
 
 object SparkShimImpl extends Spark330PlusShims with Spark321PlusDBShims {
   // AnsiCast is removed from Spark3.4.0
