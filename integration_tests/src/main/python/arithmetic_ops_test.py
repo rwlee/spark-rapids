@@ -170,11 +170,10 @@ def test_multiplication_ansi_enabled(data_gen):
             conf=ansi_enabled_conf)
 
 def test_multiplication_ansi_overflow():
-    exception_str = 'ArithmeticException'
     assert_gpu_and_cpu_error(
         lambda spark : unary_op_df(spark, DecimalGen(38, 0)).selectExpr("a * " + "9"*38 + " as ret").collect(),
         ansi_enabled_conf,
-        exception_str)
+        error_message=_get_arithmetic_overflow_error_message())
 
 @pytest.mark.parametrize('lhs', [byte_gen, short_gen, int_gen, long_gen, DecimalGen(6, 5), DecimalGen(6, 4), DecimalGen(5, 4), DecimalGen(5, 3),
     DecimalGen(4, 2), DecimalGen(3, -2), DecimalGen(16, 7), DecimalGen(19, 0),
@@ -394,8 +393,7 @@ def test_unary_minus_ansi_overflow(data_type, value):
     assert_gpu_and_cpu_error(
             df_fun=lambda spark: _get_overflow_df(spark, [value], data_type, '-a').collect(),
             conf=ansi_enabled_conf,
-            error_message='java.lang.ArithmeticException' if is_before_spark_330() else \
-                          'org.apache.spark.SparkArithmeticException')
+            error_message=_get_arithmetic_overflow_error_message())
 
 # This just ends up being a pass through.  There is no good way to force
 # a unary positive into a plan, because it gets optimized out, but this
@@ -1150,7 +1148,7 @@ def test_day_time_interval_division_round_overflow(data_type, value_pair):
     assert_gpu_and_cpu_error(
         df_fun=lambda spark: _get_overflow_df_2cols(spark, [DayTimeIntervalType(), data_type], value_pair, 'a / b').collect(),
         conf={},
-        error_message='java.lang.ArithmeticException')
+        error_message=_get_arithmetic_overflow_error_message())
 
 @pytest.mark.skipif(is_before_spark_330(), reason='DayTimeInterval is not supported before Pyspark 3.3.0')
 @pytest.mark.parametrize('data_type,value_pair', [
