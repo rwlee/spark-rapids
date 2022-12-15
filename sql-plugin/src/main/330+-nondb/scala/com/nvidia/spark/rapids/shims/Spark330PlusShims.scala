@@ -31,7 +31,7 @@ import org.apache.spark.sql.rapids._
 import org.apache.spark.sql.rapids.shims.{GpuDivideYMInterval, GpuMultiplyYMInterval}
 import org.apache.spark.sql.types.StructType
 
-trait Spark330PlusShims extends Spark321PlusShims with Spark320PlusNonDBShims {
+trait Spark330PlusNonDBShims extends Spark330PlusShims with Spark320PlusNonDBShims {
 
   override def neverReplaceShowCurrentNamespaceCommand: ExecRule[_ <: SparkPlan] = null
 

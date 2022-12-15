@@ -16,4 +16,4 @@
 
 package com.nvidia.spark.rapids.shims
 
-trait Spark330PlusNonDBShims extends Spark330PlusShims
+trait Spark330PlusShims extends Spark321PlusShims
