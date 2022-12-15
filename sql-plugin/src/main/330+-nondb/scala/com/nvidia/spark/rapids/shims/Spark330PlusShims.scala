@@ -31,7 +31,7 @@ import org.apache.spark.sql.execution.python.PythonMapInArrowExec
 import org.apache.spark.sql.internal.SQLConf
 import org.apache.spark.sql.rapids._
 import org.apache.spark.sql.rapids.execution.python.GpuPythonMapInArrowExecMeta
-import org.apache.spark.sql.rapids.shims.{GpuDivideDTInterval, GpuDivideYMInterval, GpuMultiplyDTInterval, GpuMultiplyYMInterval, GpuTimeAdd}
+import org.apache.spark.sql.rapids.shims.{GpuDivideDTInterval, GpuDivideYMInterval, GpuMultiplyDTInterval, GpuTimeAdd}
 import org.apache.spark.sql.types.{CalendarIntervalType, DayTimeIntervalType, StructType}
 import org.apache.spark.unsafe.types.CalendarInterval
 
