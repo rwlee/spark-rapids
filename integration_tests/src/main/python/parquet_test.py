@@ -269,12 +269,12 @@ def test_parquet_read_coalescing_multiple_files(spark_tmp_path, parquet_gens, re
 #             lambda spark : spark.read.parquet(data_path),
 #             conf=all_confs)
 
-# parquet_pred_push_gens = [
-#         byte_gen, short_gen, int_gen, long_gen, float_gen, double_gen, boolean_gen,
-#         string_gen, date_gen,
-#         # Once https://github.com/NVIDIA/spark-rapids/issues/132 is fixed replace this with
-#         # timestamp_gen
-#         TimestampGen(start=datetime(1900, 1, 1, tzinfo=timezone.utc))] + decimal_gens
+parquet_pred_push_gens = [
+        byte_gen, short_gen, int_gen, long_gen, float_gen, double_gen, boolean_gen,
+        string_gen, date_gen,
+        # Once https://github.com/NVIDIA/spark-rapids/issues/132 is fixed replace this with
+        # timestamp_gen
+        TimestampGen(start=datetime(1900, 1, 1, tzinfo=timezone.utc))] + decimal_gens
 
 # @pytest.mark.parametrize('parquet_gen', parquet_pred_push_gens, ids=idfn)
 # @pytest.mark.parametrize('read_func', [read_parquet_df, read_parquet_sql])
@@ -293,7 +293,7 @@ def test_parquet_read_coalescing_multiple_files(spark_tmp_path, parquet_gens, re
 #             lambda spark: rf(spark).select(f.col('a') >= s0),
 #             conf=all_confs)
 
-# parquet_ts_write_options = ['INT96', 'TIMESTAMP_MICROS', 'TIMESTAMP_MILLIS']
+parquet_ts_write_options = ['INT96', 'TIMESTAMP_MICROS', 'TIMESTAMP_MILLIS']
 
 
 # # Once https://github.com/NVIDIA/spark-rapids/issues/1126 is fixed delete this test and merge it
@@ -336,10 +336,10 @@ def test_parquet_read_coalescing_multiple_files(spark_tmp_path, parquet_gens, re
 #             lambda spark : spark.read.parquet(data_path),
 #             conf=all_confs)
 
-# def readParquetCatchException(spark, data_path):
-#     with pytest.raises(Exception) as e_info:
-#         df = spark.read.parquet(data_path).collect()
-#     assert e_info.match(r".*SparkUpgradeException.*")
+def readParquetCatchException(spark, data_path):
+    with pytest.raises(Exception) as e_info:
+        df = spark.read.parquet(data_path).collect()
+    assert e_info.match(r".*SparkUpgradeException.*")
 
 # # Once https://github.com/NVIDIA/spark-rapids/issues/1126 is fixed nested timestamps and dates should be added in
 # # Once https://github.com/NVIDIA/spark-rapids/issues/132 is fixed replace this with
@@ -377,11 +377,11 @@ def test_parquet_read_coalescing_multiple_files(spark_tmp_path, parquet_gens, re
 #     assert_gpu_and_cpu_are_equal_collect(read_func(data_path), conf=all_confs)
 
 
-# parquet_gens_legacy_list = [[byte_gen, short_gen, int_gen, long_gen, float_gen, double_gen,
-#                             string_gen, boolean_gen, DateGen(start=date(1590, 1, 1)),
-#                             TimestampGen(start=datetime(1900, 1, 1, tzinfo=timezone.utc))] + decimal_gens,
-#                             pytest.param([timestamp_gen], marks=pytest.mark.xfail(reason='https://github.com/NVIDIA/spark-rapids/issues/133')),
-#                             pytest.param([date_gen], marks=pytest.mark.xfail(reason='https://github.com/NVIDIA/spark-rapids/issues/133'))]
+parquet_gens_legacy_list = [[byte_gen, short_gen, int_gen, long_gen, float_gen, double_gen,
+                            string_gen, boolean_gen, DateGen(start=date(1590, 1, 1)),
+                            TimestampGen(start=datetime(1900, 1, 1, tzinfo=timezone.utc))] + decimal_gens,
+                            pytest.param([timestamp_gen], marks=pytest.mark.xfail(reason='https://github.com/NVIDIA/spark-rapids/issues/133')),
+                            pytest.param([date_gen], marks=pytest.mark.xfail(reason='https://github.com/NVIDIA/spark-rapids/issues/133'))]
 
 # @pytest.mark.parametrize('parquet_gens', parquet_gens_legacy_list, ids=idfn)
 # @pytest.mark.parametrize('reader_confs', reader_opt_confs)
@@ -581,12 +581,12 @@ def test_parquet_read_coalescing_multiple_files(spark_tmp_path, parquet_gens, re
 #                         'input_file_block_length()'),
 #             conf=all_confs)
 
-# def createBucketedTableAndJoin(spark, tbl_1, tbl_2):
-#     spark.range(10e4).write.bucketBy(4, "id").sortBy("id").mode('overwrite').saveAsTable(tbl_1)
-#     spark.range(10e6).write.bucketBy(4, "id").sortBy("id").mode('overwrite').saveAsTable(tbl_2)
-#     bucketed_4_10e4 = spark.table(tbl_1)
-#     bucketed_4_10e6 = spark.table(tbl_2)
-#     return bucketed_4_10e4.join(bucketed_4_10e6, "id")
+def createBucketedTableAndJoin(spark, tbl_1, tbl_2):
+    spark.range(10e4).write.bucketBy(4, "id").sortBy("id").mode('overwrite').saveAsTable(tbl_1)
+    spark.range(10e6).write.bucketBy(4, "id").sortBy("id").mode('overwrite').saveAsTable(tbl_2)
+    bucketed_4_10e4 = spark.table(tbl_1)
+    bucketed_4_10e6 = spark.table(tbl_2)
+    return bucketed_4_10e4.join(bucketed_4_10e6, "id")
 
 # @ignore_order
 # @allow_non_gpu('DataWritingCommandExec')
@@ -623,27 +623,27 @@ def test_parquet_read_coalescing_multiple_files(spark_tmp_path, parquet_gens, re
 #                   'spark.sql.files.maxPartitionBytes': "1g"})
 
 
-# _nested_pruning_schemas = [
-#         ([["a", StructGen([["c_1", StringGen()], ["c_2", LongGen()], ["c_3", ShortGen()]])]],
-#             [["a", StructGen([["c_1", StringGen()]])]]),
-#         ([["a", StructGen([["c_1", StringGen()], ["c_2", LongGen()], ["c_3", ShortGen()]])]],
-#             [["a", StructGen([["c_2", LongGen()]])]]),
-#         ([["a", StructGen([["c_1", StringGen()], ["c_2", LongGen()], ["c_3", ShortGen()]])]],
-#             [["a", StructGen([["c_3", ShortGen()]])]]),
-#         ([["a", StructGen([["c_1", StringGen()], ["c_2", LongGen()], ["c_3", ShortGen()]])]],
-#             [["a", StructGen([["c_1", StringGen()], ["c_3", ShortGen()]])]]),
-#         ([["a", StructGen([["c_1", StringGen()], ["c_2", LongGen()], ["c_3", ShortGen()]])]],
-#             [["a", StructGen([["c_3", ShortGen()], ["c_2", LongGen()], ["c_1", StringGen()]])]]),
-#         ([["ar", ArrayGen(StructGen([["str_1", StringGen()],["str_2", StringGen()]]))]],
-#             [["ar", ArrayGen(StructGen([["str_2", StringGen()]]))]]),
-#         ([["struct", StructGen([["c_1", StringGen()], ["case_insensitive", LongGen()], ["c_3", ShortGen()]])]],
-#             [["STRUCT", StructGen([["case_INSENsitive", LongGen()]])]]),
-#         ([["struct", StructGen([["c_1", StringGen()], ["case_insensitive", LongGen()], ["c_3", ShortGen()]])]],
-#             [["struct", StructGen([["CASE_INSENSITIVE", LongGen()]])]]),
-#         ([["struct", StructGen([["c_1", StringGen()], ["case_insensitive", LongGen()], ["c_3", ShortGen()]])]],
-#             [["stRUct", StructGen([["CASE_INSENSITIVE", LongGen()]])]]),
-#         ]
-# # TODO CHECK FOR DECIMAL??
+_nested_pruning_schemas = [
+        ([["a", StructGen([["c_1", StringGen()], ["c_2", LongGen()], ["c_3", ShortGen()]])]],
+            [["a", StructGen([["c_1", StringGen()]])]]),
+        ([["a", StructGen([["c_1", StringGen()], ["c_2", LongGen()], ["c_3", ShortGen()]])]],
+            [["a", StructGen([["c_2", LongGen()]])]]),
+        ([["a", StructGen([["c_1", StringGen()], ["c_2", LongGen()], ["c_3", ShortGen()]])]],
+            [["a", StructGen([["c_3", ShortGen()]])]]),
+        ([["a", StructGen([["c_1", StringGen()], ["c_2", LongGen()], ["c_3", ShortGen()]])]],
+            [["a", StructGen([["c_1", StringGen()], ["c_3", ShortGen()]])]]),
+        ([["a", StructGen([["c_1", StringGen()], ["c_2", LongGen()], ["c_3", ShortGen()]])]],
+            [["a", StructGen([["c_3", ShortGen()], ["c_2", LongGen()], ["c_1", StringGen()]])]]),
+        ([["ar", ArrayGen(StructGen([["str_1", StringGen()],["str_2", StringGen()]]))]],
+            [["ar", ArrayGen(StructGen([["str_2", StringGen()]]))]]),
+        ([["struct", StructGen([["c_1", StringGen()], ["case_insensitive", LongGen()], ["c_3", ShortGen()]])]],
+            [["STRUCT", StructGen([["case_INSENsitive", LongGen()]])]]),
+        ([["struct", StructGen([["c_1", StringGen()], ["case_insensitive", LongGen()], ["c_3", ShortGen()]])]],
+            [["struct", StructGen([["CASE_INSENSITIVE", LongGen()]])]]),
+        ([["struct", StructGen([["c_1", StringGen()], ["case_insensitive", LongGen()], ["c_3", ShortGen()]])]],
+            [["stRUct", StructGen([["CASE_INSENSITIVE", LongGen()]])]]),
+        ]
+# TODO CHECK FOR DECIMAL??
 # @pytest.mark.parametrize('data_gen,read_schema', _nested_pruning_schemas, ids=idfn)
 # @pytest.mark.parametrize('reader_confs', reader_opt_confs)
 # @pytest.mark.parametrize('v1_enabled_list', ["", "parquet"])
@@ -741,12 +741,12 @@ def test_parquet_read_coalescing_multiple_files(spark_tmp_path, parquet_gens, re
 # # We also modified decimal generation to be at most DECIMAL64 until we can support
 # # DECIMAL128
 
-# filters = ["_1 = 500",
-#         "_1 = 500 or _1 = 1500",
-#         "_1 = 500 or _1 = 501 or _1 = 1500",
-#         "_1 = 500 or _1 = 501 or _1 = 1000 or _1 = 1500",
-#         "_1 >= 500 and _1 < 1000",
-#         "(_1 >= 500 and _1 < 1000) or (_1 >= 1500 and _1 < 1600)"]
+filters = ["_1 = 500",
+        "_1 = 500 or _1 = 1500",
+        "_1 = 500 or _1 = 501 or _1 = 1500",
+        "_1 = 500 or _1 = 501 or _1 = 1000 or _1 = 1500",
+        "_1 >= 500 and _1 < 1000",
+        "(_1 >= 500 and _1 < 1000) or (_1 >= 1500 and _1 < 1600)"]
 
 # @pytest.mark.parametrize('reader_confs', reader_opt_confs, ids=idfn)
 # @pytest.mark.parametrize('enable_dictionary', ["true", "false"], ids=idfn)
@@ -843,10 +843,10 @@ def test_parquet_read_coalescing_multiple_files(spark_tmp_path, parquet_gens, re
 #                 all_confs)
 
 
-# conf_for_parquet_aggregate_pushdown = {
-#     "spark.sql.parquet.aggregatePushdown": "true", 
-#     "spark.sql.sources.useV1SourceList": ""
-# }
+conf_for_parquet_aggregate_pushdown = {
+    "spark.sql.parquet.aggregatePushdown": "true", 
+    "spark.sql.sources.useV1SourceList": ""
+}
 
 # @pytest.mark.skipif(is_before_spark_330(), reason='Aggregate push down on Parquet is a new feature of Spark 330')
 # def test_parquet_scan_without_aggregation_pushdown_not_fallback(spark_tmp_path):
