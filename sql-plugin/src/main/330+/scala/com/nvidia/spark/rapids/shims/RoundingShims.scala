@@ -19,13 +19,11 @@ package com.nvidia.spark.rapids.shims
 import ai.rapids.cudf.DType
 import com.nvidia.spark.rapids._
 
-import org.apache.spark.rdd.RDD
-import org.apache.spark.sql.catalyst._
 import org.apache.spark.sql.catalyst.expressions._
-import org.apache.spark.sql.catalyst.plans.physical._
-import org.apache.spark.sql.execution._
+import org.apache.spark.sql.internal.SQLConf
 import org.apache.spark.sql.rapids._
-import org.apache.spark.sql.types.DecimalType
+import org.apache.spark.sql.rapids.shims.{GpuDivideDTInterval, GpuDivideYMInterval, GpuMultiplyDTInterval, GpuMultiplyYMInterval, GpuTimeAdd}
+import org.apache.spark.sql.types.{CalendarIntervalType, DayTimeIntervalType, DecimalType}
 
 trait RoundingShims extends SparkShims {
   def roundingExprs: Map[Class[_ <: Expression], ExprRule[_ <: Expression]] = Seq(
