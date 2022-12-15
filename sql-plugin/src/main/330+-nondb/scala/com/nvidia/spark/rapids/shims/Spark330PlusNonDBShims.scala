@@ -44,22 +44,6 @@ trait Spark330PlusNonDBShims extends Spark330PlusShims with Spark320PlusNonDBShi
     new FileScanRDD(sparkSession, readFunction, filePartitions, readDataSchema, metadataColumns)
   }
 
-  override def getParquetFilters(
-      schema: MessageType,
-      pushDownDate: Boolean,
-      pushDownTimestamp: Boolean,
-      pushDownDecimal: Boolean,
-      pushDownStartWith: Boolean,
-      pushDownInFilterThreshold: Int,
-      caseSensitive: Boolean,
-      lookupFileMeta: String => String,
-      dateTimeRebaseModeFromConf: String): ParquetFilters = {
-    val datetimeRebaseMode = DataSourceUtils
-      .datetimeRebaseSpec(lookupFileMeta, dateTimeRebaseModeFromConf)
-    new ParquetFilters(schema, pushDownDate, pushDownTimestamp, pushDownDecimal, pushDownStartWith,
-      pushDownInFilterThreshold, caseSensitive, datetimeRebaseMode)
-  }
-
   override def tagFileSourceScanExec(meta: SparkPlanMeta[FileSourceScanExec]): Unit = {
     if (meta.wrapped.expressions.exists {
       case FileSourceMetadataAttribute(_) => true
@@ -96,7 +80,7 @@ trait Spark330PlusNonDBShims extends Spark330PlusShims with Spark320PlusNonDBShi
             GpuDivideYMInterval(lhs, rhs)
         })
     ).map(r => (r.getClassFor.asSubclass(classOf[Expression]), r)).toMap
-    super.getExprs ++ map ++ DayTimeIntervalShims.exprs ++ RoundingShims.exprs
+    super.getExprs ++ map
   }
 
   // GPU support ANSI interval types from 330
@@ -118,10 +102,6 @@ trait Spark330PlusNonDBShims extends Spark330PlusShims with Spark320PlusNonDBShi
           TypeSig.all),
         (fsse, conf, p, r) => new FileSourceScanExecMeta(fsse, conf, p, r))
     ).map(r => (r.getClassFor.asSubclass(classOf[SparkPlan]), r)).toMap
-    super.getExecs ++ map ++ PythonMapInArrowExecShims.execs
+    super.getExecs ++ map
   }
-
 }
-
-// Fallback to the default definition of `deterministic`
-trait GpuDeterministicFirstLastCollectShim extends Expression

@@ -25,31 +25,9 @@ import org.apache.spark.sql.execution.SparkPlan
 import org.apache.spark.sql.execution.datasources._
 import org.apache.spark.sql.execution.datasources.parquet.ParquetFilters
 
-object SparkShimImpl extends Spark321PlusDBShims {
+object SparkShimImpl extends Spark330PlusShims with Spark321PlusDBShims {
   // AnsiCast is removed from Spark3.4.0
   override def ansiCastRule: ExprRule[_ <: Expression] = null
-
-  override def getParquetFilters(
-      schema: MessageType,
-      pushDownDate: Boolean,
-      pushDownTimestamp: Boolean,
-      pushDownDecimal: Boolean,
-      pushDownStartWith: Boolean,
-      pushDownInFilterThreshold: Int,
-      caseSensitive: Boolean,
-      lookupFileMeta: String => String,
-      dateTimeRebaseModeFromConf: String): ParquetFilters = {
-    val datetimeRebaseMode = DataSourceUtils
-      .datetimeRebaseSpec(lookupFileMeta, dateTimeRebaseModeFromConf)
-    new ParquetFilters(schema, pushDownDate, pushDownTimestamp, pushDownDecimal, pushDownStartWith,
-      pushDownInFilterThreshold, caseSensitive, datetimeRebaseMode)
-  }
-
-  override def getExprs: Map[Class[_ <: Expression], ExprRule[_ <: Expression]] =
-    super.getExprs ++ DayTimeIntervalShims.exprs ++ RoundingShims.exprs
-
-  override def getExecs: Map[Class[_ <: SparkPlan], ExecRule[_ <: SparkPlan]] =
-    super.getExecs ++ PythonMapInArrowExecShims.execs
 }
 
 trait ShimGetArrayStructFields extends ExtractValue {
@@ -63,6 +41,3 @@ trait ShimGetArrayItem extends ExtractValue {
 trait ShimGetStructField extends ExtractValue {
   override def nodePatternsInternal(): Seq[TreePattern] = Seq(GET_STRUCT_FIELD)
 }
-
-// Fallback to the default definition of `deterministic`
-trait GpuDeterministicFirstLastCollectShim extends Expression

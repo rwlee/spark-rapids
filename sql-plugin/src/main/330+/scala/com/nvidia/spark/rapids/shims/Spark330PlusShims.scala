@@ -16,4 +16,30 @@
 
 package com.nvidia.spark.rapids.shims
 
-trait Spark330PlusShims extends Spark321PlusShims
+trait Spark330PlusShims extends Spark321PlusShims {
+
+  override def getParquetFilters(
+      schema: MessageType,
+      pushDownDate: Boolean,
+      pushDownTimestamp: Boolean,
+      pushDownDecimal: Boolean,
+      pushDownStartWith: Boolean,
+      pushDownInFilterThreshold: Int,
+      caseSensitive: Boolean,
+      lookupFileMeta: String => String,
+      dateTimeRebaseModeFromConf: String): ParquetFilters = {
+    val datetimeRebaseMode = DataSourceUtils
+      .datetimeRebaseSpec(lookupFileMeta, dateTimeRebaseModeFromConf)
+    new ParquetFilters(schema, pushDownDate, pushDownTimestamp, pushDownDecimal, pushDownStartWith,
+      pushDownInFilterThreshold, caseSensitive, datetimeRebaseMode)
+  }
+
+  override def getExprs: Map[Class[_ <: Expression], ExprRule[_ <: Expression]] =
+    super.getExprs ++ DayTimeIntervalShims.exprs ++ RoundingShims.exprs
+
+  override def getExecs: Map[Class[_ <: SparkPlan], ExecRule[_ <: SparkPlan]] =
+    super.getExecs ++ PythonMapInArrowExecShims.execs
+}
+
+// Fallback to the default definition of `deterministic`
+trait GpuDeterministicFirstLastCollectShim extends Expression
