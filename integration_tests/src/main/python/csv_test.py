@@ -191,317 +191,317 @@ def read_csv_sql(data_path, schema, spark_tmp_table_factory, options = {}):
         return spark.catalog.createTable(tmp_name, source='csv', path=data_path, **opts)
     return read_impl
 
-@approximate_float
-@pytest.mark.parametrize('name,schema,options', [
-    ('Acquisition_2007Q3.txt', _acq_schema, {'sep': '|'}),
-    ('Performance_2007Q3.txt_0', _perf_schema, {'sep': '|'}),
-    ('ts.csv', _date_schema, {}),
-    ('date.csv', _date_schema, {}),
-    ('ts.csv', _ts_schema, {}),
-    ('str.csv', _ts_schema, {}),
-    ('str.csv', _bad_str_schema, {'header': 'true'}),
-    ('str.csv', _good_str_schema, {'header': 'true'}),
-    ('no-comments.csv', _three_str_schema, {}),
-    ('empty.csv', _three_str_schema, {}),
-    ('just_comments.csv', _three_str_schema, {'comment': '#'}),
-    ('trucks.csv', _trucks_schema, {'header': 'true'}),
-    ('trucks.tsv', _trucks_schema, {'sep': '\t', 'header': 'true'}),
-    ('trucks-different.csv', _trucks_schema, {'sep': '|', 'header': 'true', 'quote': "'"}),
-    ('trucks-blank-names.csv', _trucks_schema, {'header': 'true'}),
-    ('trucks-windows.csv', _trucks_schema, {'header': 'true'}),
-    ('trucks-empty-values.csv', _trucks_schema, {'header': 'true'}),
-    ('trucks-extra-columns.csv', _trucks_schema, {'header': 'true'}),
-    pytest.param('trucks-comments.csv', _trucks_schema, {'header': 'true', 'comment': '~'}, marks=pytest.mark.xfail(reason='https://github.com/NVIDIA/spark-rapids/issues/2066')),
-    ('trucks-more-comments.csv', _trucks_schema,  {'header': 'true', 'comment': '#'}),
-    pytest.param('trucks-missing-quotes.csv', _trucks_schema, {'header': 'true'}, marks=pytest.mark.xfail(reason='https://github.com/NVIDIA/spark-rapids/issues/130')),
-    pytest.param('trucks-null.csv', _trucks_schema, {'header': 'true', 'nullValue': 'null'}, marks=pytest.mark.xfail(reason='https://github.com/NVIDIA/spark-rapids/issues/2068')),
-    pytest.param('trucks-null.csv', _trucks_schema, {'header': 'true'}, marks=pytest.mark.xfail(reason='https://github.com/NVIDIA/spark-rapids/issues/1986')),
-    pytest.param('simple_int_values.csv', _byte_schema, {'header': 'true'}),
-    pytest.param('simple_int_values.csv', _short_schema, {'header': 'true'}),
-    pytest.param('simple_int_values.csv', _int_schema, {'header': 'true'}),
-    pytest.param('simple_int_values.csv', _long_schema, {'header': 'true'}),
-    ('simple_int_values.csv', _float_schema, {'header': 'true'}),
-    ('simple_int_values.csv', _double_schema, {'header': 'true'}),
-    ('simple_int_values.csv', _decimal_10_2_schema, {'header': 'true'}),
-    ('decimals.csv', _decimal_10_2_schema, {'header': 'true'}),
-    ('decimals.csv', _decimal_10_3_schema, {'header': 'true'}),
-    pytest.param('empty_int_values.csv', _empty_byte_schema, {'header': 'true'}),
-    pytest.param('empty_int_values.csv', _empty_short_schema, {'header': 'true'}),
-    pytest.param('empty_int_values.csv', _empty_int_schema, {'header': 'true'}),
-    pytest.param('empty_int_values.csv', _empty_long_schema, {'header': 'true'}),
-    pytest.param('empty_int_values.csv', _empty_float_schema, {'header': 'true'}),
-    pytest.param('empty_int_values.csv', _empty_double_schema, {'header': 'true'}),
-    pytest.param('nan_and_inf.csv', _float_schema, {'header': 'true'}, marks=pytest.mark.xfail(reason='https://github.com/NVIDIA/spark-rapids/issues/125')),
-    pytest.param('floats_invalid.csv', _float_schema, {'header': 'true'}),
-    pytest.param('floats_invalid.csv', _double_schema, {'header': 'true'}),
-    pytest.param('simple_float_values.csv', _byte_schema, {'header': 'true'}),
-    pytest.param('simple_float_values.csv', _short_schema, {'header': 'true'}),
-    pytest.param('simple_float_values.csv', _int_schema, {'header': 'true'}),
-    pytest.param('simple_float_values.csv', _long_schema, {'header': 'true'}),
-    pytest.param('simple_float_values.csv', _float_schema, {'header': 'true'}),
-    pytest.param('simple_float_values.csv', _double_schema, {'header': 'true'}),
-    pytest.param('simple_float_values.csv', _decimal_10_2_schema, {'header': 'true'}),
-    pytest.param('simple_float_values.csv', _decimal_10_3_schema, {'header': 'true'}),
-    pytest.param('simple_boolean_values.csv', _bool_schema, {'header': 'true'}),
-    pytest.param('ints_with_whitespace.csv', _number_as_string_schema, {'header': 'true'}, marks=pytest.mark.xfail(reason='https://github.com/NVIDIA/spark-rapids/issues/2069')),
-    pytest.param('ints_with_whitespace.csv', _byte_schema, {'header': 'true'}, marks=pytest.mark.xfail(reason='https://github.com/NVIDIA/spark-rapids/issues/130'))
-    ], ids=idfn)
-@pytest.mark.parametrize('read_func', [read_csv_df, read_csv_sql])
-@pytest.mark.parametrize('v1_enabled_list', ["", "csv"])
-@pytest.mark.parametrize('ansi_enabled', ["true", "false"])
-def test_basic_csv_read(std_input_path, name, schema, options, read_func, v1_enabled_list, ansi_enabled, spark_tmp_table_factory):
-    updated_conf=copy_and_update(_enable_all_types_conf, {
-        'spark.sql.sources.useV1SourceList': v1_enabled_list,
-        'spark.sql.ansi.enabled': ansi_enabled
-    })
-    assert_gpu_and_cpu_are_equal_collect(read_func(std_input_path + '/' + name, schema, spark_tmp_table_factory, options),
-            conf=updated_conf)
+# @approximate_float
+# @pytest.mark.parametrize('name,schema,options', [
+#     ('Acquisition_2007Q3.txt', _acq_schema, {'sep': '|'}),
+#     ('Performance_2007Q3.txt_0', _perf_schema, {'sep': '|'}),
+#     ('ts.csv', _date_schema, {}),
+#     ('date.csv', _date_schema, {}),
+#     ('ts.csv', _ts_schema, {}),
+#     ('str.csv', _ts_schema, {}),
+#     ('str.csv', _bad_str_schema, {'header': 'true'}),
+#     ('str.csv', _good_str_schema, {'header': 'true'}),
+#     ('no-comments.csv', _three_str_schema, {}),
+#     ('empty.csv', _three_str_schema, {}),
+#     ('just_comments.csv', _three_str_schema, {'comment': '#'}),
+#     ('trucks.csv', _trucks_schema, {'header': 'true'}),
+#     ('trucks.tsv', _trucks_schema, {'sep': '\t', 'header': 'true'}),
+#     ('trucks-different.csv', _trucks_schema, {'sep': '|', 'header': 'true', 'quote': "'"}),
+#     ('trucks-blank-names.csv', _trucks_schema, {'header': 'true'}),
+#     ('trucks-windows.csv', _trucks_schema, {'header': 'true'}),
+#     ('trucks-empty-values.csv', _trucks_schema, {'header': 'true'}),
+#     ('trucks-extra-columns.csv', _trucks_schema, {'header': 'true'}),
+#     pytest.param('trucks-comments.csv', _trucks_schema, {'header': 'true', 'comment': '~'}, marks=pytest.mark.xfail(reason='https://github.com/NVIDIA/spark-rapids/issues/2066')),
+#     ('trucks-more-comments.csv', _trucks_schema,  {'header': 'true', 'comment': '#'}),
+#     pytest.param('trucks-missing-quotes.csv', _trucks_schema, {'header': 'true'}, marks=pytest.mark.xfail(reason='https://github.com/NVIDIA/spark-rapids/issues/130')),
+#     pytest.param('trucks-null.csv', _trucks_schema, {'header': 'true', 'nullValue': 'null'}, marks=pytest.mark.xfail(reason='https://github.com/NVIDIA/spark-rapids/issues/2068')),
+#     pytest.param('trucks-null.csv', _trucks_schema, {'header': 'true'}, marks=pytest.mark.xfail(reason='https://github.com/NVIDIA/spark-rapids/issues/1986')),
+#     pytest.param('simple_int_values.csv', _byte_schema, {'header': 'true'}),
+#     pytest.param('simple_int_values.csv', _short_schema, {'header': 'true'}),
+#     pytest.param('simple_int_values.csv', _int_schema, {'header': 'true'}),
+#     pytest.param('simple_int_values.csv', _long_schema, {'header': 'true'}),
+#     ('simple_int_values.csv', _float_schema, {'header': 'true'}),
+#     ('simple_int_values.csv', _double_schema, {'header': 'true'}),
+#     ('simple_int_values.csv', _decimal_10_2_schema, {'header': 'true'}),
+#     ('decimals.csv', _decimal_10_2_schema, {'header': 'true'}),
+#     ('decimals.csv', _decimal_10_3_schema, {'header': 'true'}),
+#     pytest.param('empty_int_values.csv', _empty_byte_schema, {'header': 'true'}),
+#     pytest.param('empty_int_values.csv', _empty_short_schema, {'header': 'true'}),
+#     pytest.param('empty_int_values.csv', _empty_int_schema, {'header': 'true'}),
+#     pytest.param('empty_int_values.csv', _empty_long_schema, {'header': 'true'}),
+#     pytest.param('empty_int_values.csv', _empty_float_schema, {'header': 'true'}),
+#     pytest.param('empty_int_values.csv', _empty_double_schema, {'header': 'true'}),
+#     pytest.param('nan_and_inf.csv', _float_schema, {'header': 'true'}, marks=pytest.mark.xfail(reason='https://github.com/NVIDIA/spark-rapids/issues/125')),
+#     pytest.param('floats_invalid.csv', _float_schema, {'header': 'true'}),
+#     pytest.param('floats_invalid.csv', _double_schema, {'header': 'true'}),
+#     pytest.param('simple_float_values.csv', _byte_schema, {'header': 'true'}),
+#     pytest.param('simple_float_values.csv', _short_schema, {'header': 'true'}),
+#     pytest.param('simple_float_values.csv', _int_schema, {'header': 'true'}),
+#     pytest.param('simple_float_values.csv', _long_schema, {'header': 'true'}),
+#     pytest.param('simple_float_values.csv', _float_schema, {'header': 'true'}),
+#     pytest.param('simple_float_values.csv', _double_schema, {'header': 'true'}),
+#     pytest.param('simple_float_values.csv', _decimal_10_2_schema, {'header': 'true'}),
+#     pytest.param('simple_float_values.csv', _decimal_10_3_schema, {'header': 'true'}),
+#     pytest.param('simple_boolean_values.csv', _bool_schema, {'header': 'true'}),
+#     pytest.param('ints_with_whitespace.csv', _number_as_string_schema, {'header': 'true'}, marks=pytest.mark.xfail(reason='https://github.com/NVIDIA/spark-rapids/issues/2069')),
+#     pytest.param('ints_with_whitespace.csv', _byte_schema, {'header': 'true'}, marks=pytest.mark.xfail(reason='https://github.com/NVIDIA/spark-rapids/issues/130'))
+#     ], ids=idfn)
+# @pytest.mark.parametrize('read_func', [read_csv_df, read_csv_sql])
+# @pytest.mark.parametrize('v1_enabled_list', ["", "csv"])
+# @pytest.mark.parametrize('ansi_enabled', ["true", "false"])
+# def test_basic_csv_read(std_input_path, name, schema, options, read_func, v1_enabled_list, ansi_enabled, spark_tmp_table_factory):
+#     updated_conf=copy_and_update(_enable_all_types_conf, {
+#         'spark.sql.sources.useV1SourceList': v1_enabled_list,
+#         'spark.sql.ansi.enabled': ansi_enabled
+#     })
+#     assert_gpu_and_cpu_are_equal_collect(read_func(std_input_path + '/' + name, schema, spark_tmp_table_factory, options),
+#             conf=updated_conf)
 
-@pytest.mark.parametrize('name,schema,options', [
-    pytest.param('small_float_values.csv', _float_schema, {'header': 'true'}),
-    pytest.param('small_float_values.csv', _double_schema, {'header': 'true'}),
-], ids=idfn)
-@pytest.mark.parametrize('read_func', [read_csv_df, read_csv_sql])
-@pytest.mark.parametrize('v1_enabled_list', ["", "csv"])
-@pytest.mark.parametrize('ansi_enabled', ["true", "false"])
-def test_csv_read_small_floats(std_input_path, name, schema, options, read_func, v1_enabled_list, ansi_enabled, spark_tmp_table_factory):
-    updated_conf=copy_and_update(_enable_all_types_conf, {
-        'spark.sql.sources.useV1SourceList': v1_enabled_list,
-        'spark.sql.ansi.enabled': ansi_enabled
-    })
-    assert_gpu_and_cpu_are_equal_collect(read_func(std_input_path + '/' + name, schema, spark_tmp_table_factory, options),
-                                         conf=updated_conf)
+# @pytest.mark.parametrize('name,schema,options', [
+#     pytest.param('small_float_values.csv', _float_schema, {'header': 'true'}),
+#     pytest.param('small_float_values.csv', _double_schema, {'header': 'true'}),
+# ], ids=idfn)
+# @pytest.mark.parametrize('read_func', [read_csv_df, read_csv_sql])
+# @pytest.mark.parametrize('v1_enabled_list', ["", "csv"])
+# @pytest.mark.parametrize('ansi_enabled', ["true", "false"])
+# def test_csv_read_small_floats(std_input_path, name, schema, options, read_func, v1_enabled_list, ansi_enabled, spark_tmp_table_factory):
+#     updated_conf=copy_and_update(_enable_all_types_conf, {
+#         'spark.sql.sources.useV1SourceList': v1_enabled_list,
+#         'spark.sql.ansi.enabled': ansi_enabled
+#     })
+#     assert_gpu_and_cpu_are_equal_collect(read_func(std_input_path + '/' + name, schema, spark_tmp_table_factory, options),
+#                                          conf=updated_conf)
 
-csv_supported_gens = [
-        # Spark does not escape '\r' or '\n' even though it uses it to mark end of record
-        # This would require multiLine reads to work correctly so we avoid these chars
-        StringGen('(\\w| |\t|\ud720){0,10}', nullable=False),
-        StringGen('[aAbB ]{0,10}'),
-        StringGen('[nN][aA][nN]'),
-        StringGen('[+-]?[iI][nN][fF]([iI][nN][iI][tT][yY])?'),
-        byte_gen, short_gen, int_gen, long_gen, boolean_gen, date_gen,
-        DoubleGen(no_nans=False),
-        pytest.param(double_gen),
-        pytest.param(FloatGen(no_nans=False)),
-        pytest.param(float_gen),
-        TimestampGen()]
+# csv_supported_gens = [
+#         # Spark does not escape '\r' or '\n' even though it uses it to mark end of record
+#         # This would require multiLine reads to work correctly so we avoid these chars
+#         StringGen('(\\w| |\t|\ud720){0,10}', nullable=False),
+#         StringGen('[aAbB ]{0,10}'),
+#         StringGen('[nN][aA][nN]'),
+#         StringGen('[+-]?[iI][nN][fF]([iI][nN][iI][tT][yY])?'),
+#         byte_gen, short_gen, int_gen, long_gen, boolean_gen, date_gen,
+#         DoubleGen(no_nans=False),
+#         pytest.param(double_gen),
+#         pytest.param(FloatGen(no_nans=False)),
+#         pytest.param(float_gen),
+#         TimestampGen()]
 
-@approximate_float
-@pytest.mark.parametrize('data_gen', csv_supported_gens, ids=idfn)
-@pytest.mark.parametrize('v1_enabled_list', ["", "csv"])
-def test_round_trip(spark_tmp_path, data_gen, v1_enabled_list):
-    gen = StructGen([('a', data_gen)], nullable=False)
-    data_path = spark_tmp_path + '/CSV_DATA'
-    schema = gen.data_type
-    updated_conf = copy_and_update(_enable_all_types_conf, {'spark.sql.sources.useV1SourceList': v1_enabled_list})
-    with_cpu_session(
-            lambda spark : gen_df(spark, gen).write.csv(data_path))
-    assert_gpu_and_cpu_are_equal_collect(
-            lambda spark : spark.read.schema(schema).csv(data_path),
-            conf=updated_conf)
+# @approximate_float
+# @pytest.mark.parametrize('data_gen', csv_supported_gens, ids=idfn)
+# @pytest.mark.parametrize('v1_enabled_list', ["", "csv"])
+# def test_round_trip(spark_tmp_path, data_gen, v1_enabled_list):
+#     gen = StructGen([('a', data_gen)], nullable=False)
+#     data_path = spark_tmp_path + '/CSV_DATA'
+#     schema = gen.data_type
+#     updated_conf = copy_and_update(_enable_all_types_conf, {'spark.sql.sources.useV1SourceList': v1_enabled_list})
+#     with_cpu_session(
+#             lambda spark : gen_df(spark, gen).write.csv(data_path))
+#     assert_gpu_and_cpu_are_equal_collect(
+#             lambda spark : spark.read.schema(schema).csv(data_path),
+#             conf=updated_conf)
 
-@allow_non_gpu('org.apache.spark.sql.execution.LeafExecNode')
-@pytest.mark.parametrize('read_func', [read_csv_df, read_csv_sql])
-@pytest.mark.parametrize('disable_conf', ['spark.rapids.sql.format.csv.enabled', 'spark.rapids.sql.format.csv.read.enabled'])
-def test_csv_fallback(spark_tmp_path, read_func, disable_conf, spark_tmp_table_factory):
-    data_gens =[
-        StringGen('(\\w| |\t|\ud720){0,10}', nullable=False),
-        byte_gen, short_gen, int_gen, long_gen, boolean_gen, date_gen]
+# @allow_non_gpu('org.apache.spark.sql.execution.LeafExecNode')
+# @pytest.mark.parametrize('read_func', [read_csv_df, read_csv_sql])
+# @pytest.mark.parametrize('disable_conf', ['spark.rapids.sql.format.csv.enabled', 'spark.rapids.sql.format.csv.read.enabled'])
+# def test_csv_fallback(spark_tmp_path, read_func, disable_conf, spark_tmp_table_factory):
+#     data_gens =[
+#         StringGen('(\\w| |\t|\ud720){0,10}', nullable=False),
+#         byte_gen, short_gen, int_gen, long_gen, boolean_gen, date_gen]
 
-    gen_list = [('_c' + str(i), gen) for i, gen in enumerate(data_gens)]
-    gen = StructGen(gen_list, nullable=False)
-    data_path = spark_tmp_path + '/CSV_DATA'
-    schema = gen.data_type
-    updated_conf = copy_and_update(_enable_all_types_conf, {disable_conf: 'false'})
+#     gen_list = [('_c' + str(i), gen) for i, gen in enumerate(data_gens)]
+#     gen = StructGen(gen_list, nullable=False)
+#     data_path = spark_tmp_path + '/CSV_DATA'
+#     schema = gen.data_type
+#     updated_conf = copy_and_update(_enable_all_types_conf, {disable_conf: 'false'})
 
-    reader = read_func(data_path, schema, spark_tmp_table_factory)
-    with_cpu_session(
-            lambda spark : gen_df(spark, gen).write.csv(data_path))
-    assert_gpu_fallback_collect(
-            lambda spark : reader(spark).select(f.col('*'), f.col('_c2') + f.col('_c3')),
-            # TODO add support for lists
-            cpu_fallback_class_name=get_non_gpu_allowed()[0],
-            conf=updated_conf)
+#     reader = read_func(data_path, schema, spark_tmp_table_factory)
+#     with_cpu_session(
+#             lambda spark : gen_df(spark, gen).write.csv(data_path))
+#     assert_gpu_fallback_collect(
+#             lambda spark : reader(spark).select(f.col('*'), f.col('_c2') + f.col('_c3')),
+#             # TODO add support for lists
+#             cpu_fallback_class_name=get_non_gpu_allowed()[0],
+#             conf=updated_conf)
 
-csv_supported_date_formats = ['yyyy-MM-dd', 'yyyy/MM/dd', 'yyyy-MM', 'yyyy/MM',
-        'MM-yyyy', 'MM/yyyy', 'MM-dd-yyyy', 'MM/dd/yyyy', 'dd-MM-yyyy', 'dd/MM/yyyy']
-@pytest.mark.parametrize('date_format', csv_supported_date_formats, ids=idfn)
-@pytest.mark.parametrize('v1_enabled_list', ["", "csv"])
-@pytest.mark.parametrize('ansi_enabled', ["true", "false"])
-@pytest.mark.parametrize('time_parser_policy', [
-    pytest.param('LEGACY', marks=pytest.mark.allow_non_gpu('BatchScanExec,FileSourceScanExec')),
-    'CORRECTED',
-    'EXCEPTION'
-])
-def test_date_formats_round_trip(spark_tmp_path, date_format, v1_enabled_list, ansi_enabled, time_parser_policy):
-    gen = StructGen([('a', DateGen())], nullable=False)
-    data_path = spark_tmp_path + '/CSV_DATA'
-    schema = gen.data_type
-    updated_conf = copy_and_update(_enable_all_types_conf,
-       {'spark.sql.sources.useV1SourceList': v1_enabled_list,
-        'spark.sql.ansi.enabled': ansi_enabled,
-        'spark.sql.legacy.timeParserPolicy': time_parser_policy})
-    with_cpu_session(
-            lambda spark : gen_df(spark, gen).write\
-                    .option('dateFormat', date_format)\
-                    .csv(data_path))
-    if time_parser_policy == 'LEGACY':
-        expected_class = 'FileSourceScanExec'
-        if v1_enabled_list == '':
-            expected_class = 'BatchScanExec'
-        assert_gpu_fallback_collect(
-            lambda spark : spark.read \
-                .schema(schema) \
-                .option('dateFormat', date_format) \
-                .csv(data_path),
-            expected_class,
-            conf=updated_conf)
-    else:
-        assert_gpu_and_cpu_are_equal_collect(
-            lambda spark : spark.read\
-                    .schema(schema)\
-                    .option('dateFormat', date_format)\
-                    .csv(data_path),
-            conf=updated_conf)
+# csv_supported_date_formats = ['yyyy-MM-dd', 'yyyy/MM/dd', 'yyyy-MM', 'yyyy/MM',
+#         'MM-yyyy', 'MM/yyyy', 'MM-dd-yyyy', 'MM/dd/yyyy', 'dd-MM-yyyy', 'dd/MM/yyyy']
+# @pytest.mark.parametrize('date_format', csv_supported_date_formats, ids=idfn)
+# @pytest.mark.parametrize('v1_enabled_list', ["", "csv"])
+# @pytest.mark.parametrize('ansi_enabled', ["true", "false"])
+# @pytest.mark.parametrize('time_parser_policy', [
+#     pytest.param('LEGACY', marks=pytest.mark.allow_non_gpu('BatchScanExec,FileSourceScanExec')),
+#     'CORRECTED',
+#     'EXCEPTION'
+# ])
+# def test_date_formats_round_trip(spark_tmp_path, date_format, v1_enabled_list, ansi_enabled, time_parser_policy):
+#     gen = StructGen([('a', DateGen())], nullable=False)
+#     data_path = spark_tmp_path + '/CSV_DATA'
+#     schema = gen.data_type
+#     updated_conf = copy_and_update(_enable_all_types_conf,
+#        {'spark.sql.sources.useV1SourceList': v1_enabled_list,
+#         'spark.sql.ansi.enabled': ansi_enabled,
+#         'spark.sql.legacy.timeParserPolicy': time_parser_policy})
+#     with_cpu_session(
+#             lambda spark : gen_df(spark, gen).write\
+#                     .option('dateFormat', date_format)\
+#                     .csv(data_path))
+#     if time_parser_policy == 'LEGACY':
+#         expected_class = 'FileSourceScanExec'
+#         if v1_enabled_list == '':
+#             expected_class = 'BatchScanExec'
+#         assert_gpu_fallback_collect(
+#             lambda spark : spark.read \
+#                 .schema(schema) \
+#                 .option('dateFormat', date_format) \
+#                 .csv(data_path),
+#             expected_class,
+#             conf=updated_conf)
+#     else:
+#         assert_gpu_and_cpu_are_equal_collect(
+#             lambda spark : spark.read\
+#                     .schema(schema)\
+#                     .option('dateFormat', date_format)\
+#                     .csv(data_path),
+#             conf=updated_conf)
 
-@pytest.mark.parametrize('filename', ["date.csv"])
-@pytest.mark.parametrize('v1_enabled_list', ["", "csv"])
-@pytest.mark.parametrize('ansi_enabled', ["true", "false"])
-@pytest.mark.parametrize('time_parser_policy', [
-    pytest.param('LEGACY', marks=pytest.mark.allow_non_gpu('BatchScanExec,FileSourceScanExec')),
-    'CORRECTED',
-    'EXCEPTION'
-])
-def test_read_valid_and_invalid_dates(std_input_path, filename, v1_enabled_list, ansi_enabled, time_parser_policy):
-    data_path = std_input_path + '/' + filename
-    updated_conf = copy_and_update(_enable_all_types_conf,
-                                   {'spark.sql.sources.useV1SourceList': v1_enabled_list,
-                                    'spark.sql.ansi.enabled': ansi_enabled,
-                                    'spark.sql.legacy.timeParserPolicy': time_parser_policy})
-    if time_parser_policy == 'EXCEPTION':
-        assert_gpu_and_cpu_error(
-            lambda spark : spark.read \
-                .schema(_date_schema) \
-                .csv(data_path)
-                .collect(),
-            conf=updated_conf,
-            error_message='DateTimeException')
-    else:
-        assert_gpu_and_cpu_are_equal_collect(
-            lambda spark : spark.read \
-                .schema(_date_schema) \
-                .csv(data_path),
-            conf=updated_conf)
+# @pytest.mark.parametrize('filename', ["date.csv"])
+# @pytest.mark.parametrize('v1_enabled_list', ["", "csv"])
+# @pytest.mark.parametrize('ansi_enabled', ["true", "false"])
+# @pytest.mark.parametrize('time_parser_policy', [
+#     pytest.param('LEGACY', marks=pytest.mark.allow_non_gpu('BatchScanExec,FileSourceScanExec')),
+#     'CORRECTED',
+#     'EXCEPTION'
+# ])
+# def test_read_valid_and_invalid_dates(std_input_path, filename, v1_enabled_list, ansi_enabled, time_parser_policy):
+#     data_path = std_input_path + '/' + filename
+#     updated_conf = copy_and_update(_enable_all_types_conf,
+#                                    {'spark.sql.sources.useV1SourceList': v1_enabled_list,
+#                                     'spark.sql.ansi.enabled': ansi_enabled,
+#                                     'spark.sql.legacy.timeParserPolicy': time_parser_policy})
+#     if time_parser_policy == 'EXCEPTION':
+#         assert_gpu_and_cpu_error(
+#             lambda spark : spark.read \
+#                 .schema(_date_schema) \
+#                 .csv(data_path)
+#                 .collect(),
+#             conf=updated_conf,
+#             error_message='DateTimeException')
+#     else:
+#         assert_gpu_and_cpu_are_equal_collect(
+#             lambda spark : spark.read \
+#                 .schema(_date_schema) \
+#                 .csv(data_path),
+#             conf=updated_conf)
 
-csv_supported_ts_parts = ['', # Just the date
-        "'T'HH:mm:ss.SSSXXX",
-        "'T'HH:mm:ss[.SSS][XXX]",
-        "'T'HH:mm:ss.SSS",
-        "'T'HH:mm:ss[.SSS]",
-        "'T'HH:mm:ss",
-        "'T'HH:mm[:ss]",
-        "'T'HH:mm"]
+# csv_supported_ts_parts = ['', # Just the date
+#         "'T'HH:mm:ss.SSSXXX",
+#         "'T'HH:mm:ss[.SSS][XXX]",
+#         "'T'HH:mm:ss.SSS",
+#         "'T'HH:mm:ss[.SSS]",
+#         "'T'HH:mm:ss",
+#         "'T'HH:mm[:ss]",
+#         "'T'HH:mm"]
 
-@pytest.mark.parametrize('ts_part', csv_supported_ts_parts)
-@pytest.mark.parametrize('date_format', csv_supported_date_formats)
-@pytest.mark.parametrize('v1_enabled_list', ["", "csv"])
-def test_ts_formats_round_trip(spark_tmp_path, date_format, ts_part, v1_enabled_list):
-    full_format = date_format + ts_part
-    data_gen = TimestampGen()
-    gen = StructGen([('a', data_gen)], nullable=False)
-    data_path = spark_tmp_path + '/CSV_DATA'
-    schema = gen.data_type
-    with_cpu_session(
-            lambda spark : gen_df(spark, gen).write\
-                    .option('timestampFormat', full_format)\
-                    .csv(data_path))
-    updated_conf = copy_and_update(_enable_all_types_conf,
-                   {'spark.sql.sources.useV1SourceList': v1_enabled_list})
-    assert_gpu_and_cpu_are_equal_collect(
-            lambda spark : spark.read\
-                    .schema(schema)\
-                    .option('timestampFormat', full_format)\
-                    .csv(data_path),
-            conf=updated_conf)
+# @pytest.mark.parametrize('ts_part', csv_supported_ts_parts)
+# @pytest.mark.parametrize('date_format', csv_supported_date_formats)
+# @pytest.mark.parametrize('v1_enabled_list', ["", "csv"])
+# def test_ts_formats_round_trip(spark_tmp_path, date_format, ts_part, v1_enabled_list):
+#     full_format = date_format + ts_part
+#     data_gen = TimestampGen()
+#     gen = StructGen([('a', data_gen)], nullable=False)
+#     data_path = spark_tmp_path + '/CSV_DATA'
+#     schema = gen.data_type
+#     with_cpu_session(
+#             lambda spark : gen_df(spark, gen).write\
+#                     .option('timestampFormat', full_format)\
+#                     .csv(data_path))
+#     updated_conf = copy_and_update(_enable_all_types_conf,
+#                    {'spark.sql.sources.useV1SourceList': v1_enabled_list})
+#     assert_gpu_and_cpu_are_equal_collect(
+#             lambda spark : spark.read\
+#                     .schema(schema)\
+#                     .option('timestampFormat', full_format)\
+#                     .csv(data_path),
+#             conf=updated_conf)
 
-@pytest.mark.parametrize('v1_enabled_list', ["", "csv"])
-def test_input_meta(spark_tmp_path, v1_enabled_list):
-    gen = StructGen([('a', long_gen), ('b', long_gen)], nullable=False)
-    first_data_path = spark_tmp_path + '/CSV_DATA/key=0'
-    with_cpu_session(
-            lambda spark : gen_df(spark, gen).write.csv(first_data_path))
-    second_data_path = spark_tmp_path + '/CSV_DATA/key=1'
-    with_cpu_session(
-            lambda spark : gen_df(spark, gen).write.csv(second_data_path))
-    data_path = spark_tmp_path + '/CSV_DATA'
-    updated_conf = copy_and_update(_enable_all_types_conf, {'spark.sql.sources.useV1SourceList': v1_enabled_list})
-    assert_gpu_and_cpu_are_equal_collect(
-            lambda spark : spark.read.schema(gen.data_type)\
-                    .csv(data_path)\
-                    .filter(f.col('a') > 0)\
-                    .selectExpr('a',
-                        'input_file_name()',
-                        'input_file_block_start()',
-                        'input_file_block_length()'),
-            conf=updated_conf)
+# @pytest.mark.parametrize('v1_enabled_list', ["", "csv"])
+# def test_input_meta(spark_tmp_path, v1_enabled_list):
+#     gen = StructGen([('a', long_gen), ('b', long_gen)], nullable=False)
+#     first_data_path = spark_tmp_path + '/CSV_DATA/key=0'
+#     with_cpu_session(
+#             lambda spark : gen_df(spark, gen).write.csv(first_data_path))
+#     second_data_path = spark_tmp_path + '/CSV_DATA/key=1'
+#     with_cpu_session(
+#             lambda spark : gen_df(spark, gen).write.csv(second_data_path))
+#     data_path = spark_tmp_path + '/CSV_DATA'
+#     updated_conf = copy_and_update(_enable_all_types_conf, {'spark.sql.sources.useV1SourceList': v1_enabled_list})
+#     assert_gpu_and_cpu_are_equal_collect(
+#             lambda spark : spark.read.schema(gen.data_type)\
+#                     .csv(data_path)\
+#                     .filter(f.col('a') > 0)\
+#                     .selectExpr('a',
+#                         'input_file_name()',
+#                         'input_file_block_start()',
+#                         'input_file_block_length()'),
+#             conf=updated_conf)
 
-@allow_non_gpu('ProjectExec', 'Alias', 'InputFileName', 'InputFileBlockStart', 'InputFileBlockLength',
-               'FilterExec', 'And', 'IsNotNull', 'GreaterThan', 'Literal',
-               'FileSourceScanExec',
-               'BatchScanExec', 'CsvScan')
-@pytest.mark.parametrize('v1_enabled_list', ["", "csv"])
-@pytest.mark.parametrize('disable_conf', ['spark.rapids.sql.format.csv.enabled', 'spark.rapids.sql.format.csv.read.enabled'])
-def test_input_meta_fallback(spark_tmp_path, v1_enabled_list, disable_conf):
-    gen = StructGen([('a', long_gen), ('b', long_gen)], nullable=False)
-    first_data_path = spark_tmp_path + '/CSV_DATA/key=0'
-    with_cpu_session(
-            lambda spark : gen_df(spark, gen).write.csv(first_data_path))
-    second_data_path = spark_tmp_path + '/CSV_DATA/key=1'
-    with_cpu_session(
-            lambda spark : gen_df(spark, gen).write.csv(second_data_path))
-    data_path = spark_tmp_path + '/CSV_DATA'
-    updated_conf = copy_and_update(_enable_all_types_conf, {
-        'spark.sql.sources.useV1SourceList': v1_enabled_list,
-        disable_conf: 'false'})
-    assert_gpu_and_cpu_are_equal_collect(
-            lambda spark : spark.read.schema(gen.data_type)\
-                    .csv(data_path)\
-                    .filter(f.col('a') > 0)\
-                    .selectExpr('a',
-                        'input_file_name()',
-                        'input_file_block_start()',
-                        'input_file_block_length()'),
-            conf=updated_conf)
+# @allow_non_gpu('ProjectExec', 'Alias', 'InputFileName', 'InputFileBlockStart', 'InputFileBlockLength',
+#                'FilterExec', 'And', 'IsNotNull', 'GreaterThan', 'Literal',
+#                'FileSourceScanExec',
+#                'BatchScanExec', 'CsvScan')
+# @pytest.mark.parametrize('v1_enabled_list', ["", "csv"])
+# @pytest.mark.parametrize('disable_conf', ['spark.rapids.sql.format.csv.enabled', 'spark.rapids.sql.format.csv.read.enabled'])
+# def test_input_meta_fallback(spark_tmp_path, v1_enabled_list, disable_conf):
+#     gen = StructGen([('a', long_gen), ('b', long_gen)], nullable=False)
+#     first_data_path = spark_tmp_path + '/CSV_DATA/key=0'
+#     with_cpu_session(
+#             lambda spark : gen_df(spark, gen).write.csv(first_data_path))
+#     second_data_path = spark_tmp_path + '/CSV_DATA/key=1'
+#     with_cpu_session(
+#             lambda spark : gen_df(spark, gen).write.csv(second_data_path))
+#     data_path = spark_tmp_path + '/CSV_DATA'
+#     updated_conf = copy_and_update(_enable_all_types_conf, {
+#         'spark.sql.sources.useV1SourceList': v1_enabled_list,
+#         disable_conf: 'false'})
+#     assert_gpu_and_cpu_are_equal_collect(
+#             lambda spark : spark.read.schema(gen.data_type)\
+#                     .csv(data_path)\
+#                     .filter(f.col('a') > 0)\
+#                     .selectExpr('a',
+#                         'input_file_name()',
+#                         'input_file_block_start()',
+#                         'input_file_block_length()'),
+#             conf=updated_conf)
 
-@allow_non_gpu('DataWritingCommandExec')
-def test_csv_save_as_table_fallback(spark_tmp_path, spark_tmp_table_factory):
-    gen = TimestampGen()
-    data_path = spark_tmp_path + '/CSV_DATA'
-    assert_gpu_fallback_write(
-            lambda spark, path: unary_op_df(spark, gen).coalesce(1).write.format("csv").mode('overwrite').option("path", path).saveAsTable(spark_tmp_table_factory.get()),
-            lambda spark, path: spark.read.csv(path),
-            data_path,
-            'DataWritingCommandExec')
+# @allow_non_gpu('DataWritingCommandExec')
+# def test_csv_save_as_table_fallback(spark_tmp_path, spark_tmp_table_factory):
+#     gen = TimestampGen()
+#     data_path = spark_tmp_path + '/CSV_DATA'
+#     assert_gpu_fallback_write(
+#             lambda spark, path: unary_op_df(spark, gen).coalesce(1).write.format("csv").mode('overwrite').option("path", path).saveAsTable(spark_tmp_table_factory.get()),
+#             lambda spark, path: spark.read.csv(path),
+#             data_path,
+#             'DataWritingCommandExec')
 
-@pytest.mark.skipif(is_before_spark_330(), reason='Hidden file metadata columns are a new feature of Spark 330')
-@allow_non_gpu(any = True)
-@pytest.mark.parametrize('metadata_column', ["file_path", "file_name", "file_size", "file_modification_time"])
-def test_csv_scan_with_hidden_metadata_fallback(spark_tmp_path, metadata_column):
-    data_path = spark_tmp_path + "/hidden_metadata.csv"
-    with_cpu_session(lambda spark : spark.range(10) \
-                     .selectExpr("id") \
-                     .write \
-                     .mode("overwrite") \
-                     .csv(data_path))
+# @pytest.mark.skipif(is_before_spark_330(), reason='Hidden file metadata columns are a new feature of Spark 330')
+# @allow_non_gpu(any = True)
+# @pytest.mark.parametrize('metadata_column', ["file_path", "file_name", "file_size", "file_modification_time"])
+# def test_csv_scan_with_hidden_metadata_fallback(spark_tmp_path, metadata_column):
+#     data_path = spark_tmp_path + "/hidden_metadata.csv"
+#     with_cpu_session(lambda spark : spark.range(10) \
+#                      .selectExpr("id") \
+#                      .write \
+#                      .mode("overwrite") \
+#                      .csv(data_path))
 
-    def do_csv_scan(spark):
-        df = spark.read.csv(data_path).selectExpr("_c0", "_metadata.{}".format(metadata_column))
-        return df
+#     def do_csv_scan(spark):
+#         df = spark.read.csv(data_path).selectExpr("_c0", "_metadata.{}".format(metadata_column))
+#         return df
 
-    assert_cpu_and_gpu_are_equal_collect_with_capture(
-        do_csv_scan,
-        exist_classes= "FileSourceScanExec",
-        non_exist_classes= "GpuBatchScanExec")
+#     assert_cpu_and_gpu_are_equal_collect_with_capture(
+#         do_csv_scan,
+#         exist_classes= "FileSourceScanExec",
+#         non_exist_classes= "GpuBatchScanExec")
 
 @pytest.mark.skipif(is_before_spark_330(), reason='Reading day-time interval type is supported from Spark3.3.0')
 @pytest.mark.parametrize('v1_enabled_list', ["", "csv"])
@@ -529,24 +529,24 @@ def test_round_trip_for_interval(spark_tmp_path, v1_enabled_list):
         lambda spark: spark.read.schema(schema).csv(data_path),
         conf=updated_conf)
 
-@allow_non_gpu(any = True)
-def test_csv_read_case_insensitivity(spark_tmp_path):
-    gen_list = [('one', int_gen), ('tWo', byte_gen), ('THREE', boolean_gen)]
-    data_path = spark_tmp_path + '/CSV_DATA'
+# @allow_non_gpu(any = True)
+# def test_csv_read_case_insensitivity(spark_tmp_path):
+#     gen_list = [('one', int_gen), ('tWo', byte_gen), ('THREE', boolean_gen)]
+#     data_path = spark_tmp_path + '/CSV_DATA'
 
-    with_cpu_session(lambda spark: gen_df(spark, gen_list).write.option('header', True).csv(data_path))
+#     with_cpu_session(lambda spark: gen_df(spark, gen_list).write.option('header', True).csv(data_path))
 
-    assert_gpu_and_cpu_are_equal_collect(
-        lambda spark: spark.read.option('header', True).csv(data_path).select('one', 'two', 'three'),
-        {'spark.sql.caseSensitive': 'false'}
-    )
+#     assert_gpu_and_cpu_are_equal_collect(
+#         lambda spark: spark.read.option('header', True).csv(data_path).select('one', 'two', 'three'),
+#         {'spark.sql.caseSensitive': 'false'}
+#     )
 
-@allow_non_gpu('FileSourceScanExec', 'CollectLimitExec', 'DeserializeToObjectExec')
-def test_csv_read_count(spark_tmp_path):
-    data_gens = [byte_gen, short_gen, int_gen, long_gen, boolean_gen, date_gen]
-    gen_list = [('_c' + str(i), gen) for i, gen in enumerate(data_gens)]
-    data_path = spark_tmp_path + '/CSV_DATA'
+# @allow_non_gpu('FileSourceScanExec', 'CollectLimitExec', 'DeserializeToObjectExec')
+# def test_csv_read_count(spark_tmp_path):
+#     data_gens = [byte_gen, short_gen, int_gen, long_gen, boolean_gen, date_gen]
+#     gen_list = [('_c' + str(i), gen) for i, gen in enumerate(data_gens)]
+#     data_path = spark_tmp_path + '/CSV_DATA'
 
-    with_cpu_session(lambda spark: gen_df(spark, gen_list).write.csv(data_path))
+#     with_cpu_session(lambda spark: gen_df(spark, gen_list).write.csv(data_path))
 
-    assert_gpu_and_cpu_row_counts_equal(lambda spark: spark.read.csv(data_path))
+#     assert_gpu_and_cpu_row_counts_equal(lambda spark: spark.read.csv(data_path))
