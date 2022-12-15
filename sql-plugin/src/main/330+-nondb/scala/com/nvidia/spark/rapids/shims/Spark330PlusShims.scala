@@ -79,6 +79,28 @@ trait Spark330PlusShims extends Spark321PlusShims
   // GPU support ANSI interval types from 330
   override def getExprs: Map[Class[_ <: Expression], ExprRule[_ <: Expression]] = {
     val map: Map[Class[_ <: Expression], ExprRule[_ <: Expression]] = Seq(
+      GpuOverrides.expr[MultiplyYMInterval](
+        "Year-month interval * number",
+        ExprChecks.binaryProject(
+          TypeSig.YEARMONTH,
+          TypeSig.YEARMONTH,
+          ("lhs", TypeSig.YEARMONTH, TypeSig.YEARMONTH),
+          ("rhs", TypeSig.gpuNumeric - TypeSig.DECIMAL_128, TypeSig.gpuNumeric)),
+        (a, conf, p, r) => new BinaryExprMeta[MultiplyYMInterval](a, conf, p, r) {
+          override def convertToGpu(lhs: Expression, rhs: Expression): GpuExpression =
+            GpuMultiplyYMInterval(lhs, rhs)
+        }),
+      GpuOverrides.expr[DivideYMInterval](
+        "Year-month interval * operator",
+        ExprChecks.binaryProject(
+          TypeSig.YEARMONTH,
+          TypeSig.YEARMONTH,
+          ("lhs", TypeSig.YEARMONTH, TypeSig.YEARMONTH),
+          ("rhs", TypeSig.gpuNumeric - TypeSig.DECIMAL_128, TypeSig.gpuNumeric)),
+        (a, conf, p, r) => new BinaryExprMeta[DivideYMInterval](a, conf, p, r) {
+          override def convertToGpu(lhs: Expression, rhs: Expression): GpuExpression =
+            GpuDivideYMInterval(lhs, rhs)
+        })
     ).map(r => (r.getClassFor.asSubclass(classOf[Expression]), r)).toMap
     super.getExprs ++ map ++ roundingExprs
   }

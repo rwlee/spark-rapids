@@ -16,4 +16,4 @@
 
 package com.nvidia.spark.rapids.shims
 
-object SparkShimImpl extends Spark330PlusShims with AnsiCastRuleShims
+object SparkShimImpl extends Spark330PlusNonDBShims with AnsiCastRuleShims

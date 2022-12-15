@@ -24,6 +24,7 @@ import org.apache.spark.sql.internal.SQLConf
 import org.apache.spark.sql.rapids._
 import org.apache.spark.sql.rapids.shims.{GpuDivideDTInterval, GpuDivideYMInterval, GpuMultiplyDTInterval, GpuMultiplyYMInterval, GpuTimeAdd}
 import org.apache.spark.sql.types.{CalendarIntervalType, DayTimeIntervalType, DecimalType}
+import org.apache.spark.unsafe.types.CalendarInterval
 
 trait RoundingShims extends SparkShims {
   def roundingExprs: Map[Class[_ <: Expression], ExprRule[_ <: Expression]] = Seq(
@@ -136,17 +137,6 @@ trait RoundingShims extends SparkShims {
             // ANSI support for ABS was added in 3.2.0 SPARK-33275
             override def convertToGpu(child: Expression): GpuExpression = GpuAbs(child, ansiEnabled)
           }),
-      GpuOverrides.expr[MultiplyYMInterval](
-        "Year-month interval * number",
-        ExprChecks.binaryProject(
-          TypeSig.YEARMONTH,
-          TypeSig.YEARMONTH,
-          ("lhs", TypeSig.YEARMONTH, TypeSig.YEARMONTH),
-          ("rhs", TypeSig.gpuNumeric - TypeSig.DECIMAL_128, TypeSig.gpuNumeric)),
-        (a, conf, p, r) => new BinaryExprMeta[MultiplyYMInterval](a, conf, p, r) {
-          override def convertToGpu(lhs: Expression, rhs: Expression): GpuExpression =
-            GpuMultiplyYMInterval(lhs, rhs)
-        }),
       GpuOverrides.expr[MultiplyDTInterval](
         "Day-time interval * number",
         ExprChecks.binaryProject(
@@ -157,17 +147,6 @@ trait RoundingShims extends SparkShims {
         (a, conf, p, r) => new BinaryExprMeta[MultiplyDTInterval](a, conf, p, r) {
           override def convertToGpu(lhs: Expression, rhs: Expression): GpuExpression =
             GpuMultiplyDTInterval(lhs, rhs)
-        }),
-      GpuOverrides.expr[DivideYMInterval](
-        "Year-month interval * operator",
-        ExprChecks.binaryProject(
-          TypeSig.YEARMONTH,
-          TypeSig.YEARMONTH,
-          ("lhs", TypeSig.YEARMONTH, TypeSig.YEARMONTH),
-          ("rhs", TypeSig.gpuNumeric - TypeSig.DECIMAL_128, TypeSig.gpuNumeric)),
-        (a, conf, p, r) => new BinaryExprMeta[DivideYMInterval](a, conf, p, r) {
-          override def convertToGpu(lhs: Expression, rhs: Expression): GpuExpression =
-            GpuDivideYMInterval(lhs, rhs)
         }),
       GpuOverrides.expr[DivideDTInterval](
         "Day-time interval * operator",
