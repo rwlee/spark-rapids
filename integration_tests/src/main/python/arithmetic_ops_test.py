@@ -912,7 +912,7 @@ def test_div_overflow_exception_when_ansi(expr, ansi_enabled):
         assert_gpu_and_cpu_error(
             df_fun=lambda spark: _get_div_overflow_df(spark, expr).collect(),
             conf=ansi_conf,
-            error_message=_get_overflow_error('Overflow in integral divide'))
+            error_message=_get_overflow_error('ARITHMETIC_OVERFLOW', 'Overflow in integral divide'))
     else:
         assert_gpu_and_cpu_are_equal_collect(
             func=lambda spark: _get_div_overflow_df(spark, expr),
@@ -1134,7 +1134,7 @@ def test_day_time_interval_division_overflow(data_type, value_pair):
     assert_gpu_and_cpu_error(
         df_fun=lambda spark: _get_overflow_df_2cols(spark, [DayTimeIntervalType(), data_type], value_pair, 'a / b').collect(),
         conf={},
-        error_message=_get_overflow_error('Overflow in integral divide'))
+        error_message=_get_overflow_error('ARITHMETIC_OVERFLOW', 'Overflow in integral divide'))
 
 @pytest.mark.skipif(is_before_spark_330(), reason='DayTimeInterval is not supported before Pyspark 3.3.0')
 @pytest.mark.parametrize('data_type,value_pair', [
@@ -1147,7 +1147,7 @@ def test_day_time_interval_division_round_overflow(data_type, value_pair):
     assert_gpu_and_cpu_error(
         df_fun=lambda spark: _get_overflow_df_2cols(spark, [DayTimeIntervalType(), data_type], value_pair, 'a / b').collect(),
         conf={},
-        error_message=_get_overflow_error('Overflow in integral divide'))
+        error_message=_get_overflow_error('ARITHMETIC_OVERFLOW', 'Overflow in integral divide'))
 
 @pytest.mark.skipif(is_before_spark_330(), reason='DayTimeInterval is not supported before Pyspark 3.3.0')
 @pytest.mark.parametrize('data_type,value_pair', [
@@ -1199,7 +1199,12 @@ def test_day_time_interval_scalar_divided_by_zero(data_type, value):
     (DoubleType(), [timedelta(seconds=1), float('NaN')]),
 ], ids=idfn)
 def test_day_time_interval_division_nan(data_type, value_pair):
+    """
+    We don't check the error messages because they are different on CPU and GPU.
+    CPU: java.lang.ArithmeticException: input is infinite or NaN 
+    GPU: java.lang.ArithmeticException: Has NaN
+    """
     assert_gpu_and_cpu_error(
         df_fun=lambda spark: _get_overflow_df_2cols(spark, [DayTimeIntervalType(), data_type], value_pair, 'a / b').collect(),
         conf={},
-        error_message=_get_overflow_error('java.lang.ArithmeticException: input is infinite or NaN'))
+        error_message='java.lang.ArithmeticException: ')
