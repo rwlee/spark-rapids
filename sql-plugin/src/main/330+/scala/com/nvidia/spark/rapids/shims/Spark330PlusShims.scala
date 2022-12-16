@@ -43,6 +43,26 @@ trait Spark330PlusShims extends Spark321PlusShims {
       pushDownInFilterThreshold, caseSensitive, datetimeRebaseMode)
   }
 
+  override def getFileScanRDD(
+      sparkSession: SparkSession,
+      readFunction: PartitionedFile => Iterator[InternalRow],
+      filePartitions: Seq[FilePartition],
+      readDataSchema: StructType,
+      metadataColumns: Seq[AttributeReference]): RDD[InternalRow] = {
+    new FileScanRDD(sparkSession, readFunction, filePartitions, readDataSchema, metadataColumns)
+  }
+
+  override def tagFileSourceScanExec(meta: SparkPlanMeta[FileSourceScanExec]): Unit = {
+    if (meta.wrapped.expressions.exists {
+      case FileSourceMetadataAttribute(_) => true
+      case _ => false
+    }) {
+      meta.willNotWorkOnGpu("hidden metadata columns are not supported on GPU")
+    }
+    super.tagFileSourceScanExec(meta)
+  }
+
+
   override def getExprs: Map[Class[_ <: Expression], ExprRule[_ <: Expression]] =
     super.getExprs ++ DayTimeIntervalShims.exprs ++ RoundingShims.exprs
 
