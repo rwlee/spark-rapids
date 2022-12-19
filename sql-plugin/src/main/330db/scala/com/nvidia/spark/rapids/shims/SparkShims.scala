@@ -23,7 +23,8 @@ import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.expressions._
 import org.apache.spark.sql.catalyst.trees.TreePattern._
-import org.apache.spark.sql.execution.datasources.{FilePartition, FileScanRDD, PartitionedFile}
+import org.apache.spark.sql.execution.datasources.{FilePartition, PartitionedFile}
+import org.apache.spark.sql.rapids.shims.GpuFileScanRDD
 import org.apache.spark.sql.types.StructType
 
 object SparkShimImpl extends Spark330PlusShims with Spark321PlusDBShims {
