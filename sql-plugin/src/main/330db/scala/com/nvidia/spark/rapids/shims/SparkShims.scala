@@ -24,6 +24,15 @@ import org.apache.spark.sql.catalyst.trees.TreePattern._
 object SparkShimImpl extends Spark330PlusShims with Spark321PlusDBShims {
   // AnsiCast is removed from Spark3.4.0
   override def ansiCastRule: ExprRule[_ <: Expression] = null
+
+  override def getFileScanRDD(
+      sparkSession: SparkSession,
+      readFunction: PartitionedFile => Iterator[InternalRow],
+      filePartitions: Seq[FilePartition],
+      readDataSchema: StructType,
+      metadataColumns: Seq[AttributeReference]): RDD[InternalRow] = {
+    new GpuFileScanRDD(sparkSession, readFunction, filePartitions)
+  }
 }
 
 trait ShimGetArrayStructFields extends ExtractValue {

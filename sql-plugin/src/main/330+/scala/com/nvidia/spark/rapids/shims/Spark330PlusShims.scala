@@ -27,7 +27,6 @@ import org.apache.spark.sql.execution.{FileSourceScanExec, SparkPlan}
 import org.apache.spark.sql.execution.datasources.{DataSourceUtils, FilePartition, FileScanRDD, PartitionedFile}
 import org.apache.spark.sql.execution.datasources.parquet.ParquetFilters
 import org.apache.spark.sql.execution.datasources.v2.BatchScanExec
-import org.apache.spark.sql.rapids._
 import org.apache.spark.sql.types.StructType
 
 trait Spark330PlusShims extends Spark321PlusShims {
@@ -46,15 +45,6 @@ trait Spark330PlusShims extends Spark321PlusShims {
       .datetimeRebaseSpec(lookupFileMeta, dateTimeRebaseModeFromConf)
     new ParquetFilters(schema, pushDownDate, pushDownTimestamp, pushDownDecimal, pushDownStartWith,
       pushDownInFilterThreshold, caseSensitive, datetimeRebaseMode)
-  }
-
-  override def getFileScanRDD(
-      sparkSession: SparkSession,
-      readFunction: PartitionedFile => Iterator[InternalRow],
-      filePartitions: Seq[FilePartition],
-      readDataSchema: StructType,
-      metadataColumns: Seq[AttributeReference]): RDD[InternalRow] = {
-    new FileScanRDD(sparkSession, readFunction, filePartitions, readDataSchema, metadataColumns)
   }
 
   override def tagFileSourceScanExec(meta: SparkPlanMeta[FileSourceScanExec]): Unit = {
