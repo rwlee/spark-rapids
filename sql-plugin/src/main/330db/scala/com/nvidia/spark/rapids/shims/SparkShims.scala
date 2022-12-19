@@ -18,8 +18,13 @@ package com.nvidia.spark.rapids.shims
 
 import com.nvidia.spark.rapids._
 
+import org.apache.spark.rdd.RDD
+import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.expressions._
 import org.apache.spark.sql.catalyst.trees.TreePattern._
+import org.apache.spark.sql.execution.datasources.{FilePartition, FileScanRDD, PartitionedFile}
+import org.apache.spark.sql.types.StructType
 
 object SparkShimImpl extends Spark330PlusShims with Spark321PlusDBShims {
   // AnsiCast is removed from Spark3.4.0
