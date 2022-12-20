@@ -225,7 +225,7 @@ object GpuTypeShims {
   /**
    * Get additional Parquet supported types for this Shim
    */
-  def additionalParquetSupportedTypes: TypeSig = TypeSig.ansiIntervals
+  def additionalParquetSupportedTypes: TypeSig = TypeSig.ansiIntervals + TypeSig.DAYTIME
 
   /**
    * Get additional common operators supported types for this Shim
