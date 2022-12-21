@@ -14,14 +14,13 @@
  * limitations under the License.
  */
 
-package com.nvidia.spark.rapids
+package com.nvidia.spark.rapids.shims
 
-// import org.apache.spark.sql.catalyst.expressions._
-import org.apache.spark.sql.catalyst.expressions.FileSourceMetadataAttribute
-// import org.apache.spark.sql.execution._
-import org.apache.spark.sql.execution.FileSourceScanExec
-// import org.apache.spark.sql.rapids._
-import org.apache.spark.sql.rapids.GpuFileSourceScanExec
+import com.nvidia.spark.rapids._
+
+import org.apache.spark.sql.catalyst.expressions._
+import org.apache.spark.sql.execution._
+import org.apache.spark.sql.execution.datasources.v2.BatchScanExec
 
 class BatchScanExecMeta(p: BatchScanExec,
     conf: RapidsConf,

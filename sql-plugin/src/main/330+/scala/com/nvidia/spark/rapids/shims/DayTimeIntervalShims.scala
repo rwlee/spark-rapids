@@ -20,10 +20,16 @@ import com.nvidia.spark.rapids._
 
 import org.apache.spark.sql.catalyst.expressions._
 import org.apache.spark.sql.internal.SQLConf
+import org.apache.spark.sql.execution.SparkPlan
 import org.apache.spark.sql.rapids._
 import org.apache.spark.sql.rapids.shims.{GpuDivideDTInterval, GpuMultiplyDTInterval, GpuTimeAdd}
 import org.apache.spark.sql.types.{CalendarIntervalType, DayTimeIntervalType}
 import org.apache.spark.unsafe.types.CalendarInterval
+import org.apache.spark.sql.execution.datasources.v2.BatchScanExec
+import org.apache.spark.sql.execution.FileSourceScanExec
+// import org.apache.spark.sql.rapids.GpuFileSourceScanExec
+
+
 
 object DayTimeIntervalShims {
   def exprs: Map[Class[_ <: Expression], ExprRule[_ <: Expression]] = Seq(

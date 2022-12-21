@@ -14,14 +14,17 @@
  * limitations under the License.
  */
 
-package com.nvidia.spark.rapids
+package com.nvidia.spark.rapids.shims
 
-// import org.apache.spark.sql.catalyst.expressions._
-import org.apache.spark.sql.catalyst.expressions.FileSourceMetadataAttribute
-// import org.apache.spark.sql.execution._
-import org.apache.spark.sql.execution.FileSourceScanExec
-// import org.apache.spark.sql.rapids._
-import org.apache.spark.sql.rapids.GpuFileSourceScanExec
+import com.nvidia.spark.rapids._
+
+import org.apache.spark.sql.execution._
+import org.apache.spark.sql.execution.datasources._
+import org.apache.spark.sql.rapids._
+import org.apache.spark.sql.catalyst.expressions.DynamicPruningExpression
+
+// import org.apache.spark.sql.execution.FileSourceScanExec
+// import org.apache.spark.sql.rapids.GpuFileSourceScanExec
 
 class FileSourceScanExecMeta(plan: FileSourceScanExec,
     conf: RapidsConf,
@@ -59,7 +62,7 @@ class FileSourceScanExecMeta(plan: FileSourceScanExec,
   // partition filters and data filters are not run on the GPU
   override val childExprs: Seq[ExprMeta[_]] = Seq.empty
 
-  override def tagPlanForGpu(): Unit = tagFileSourceScanExec(this)
+  override def tagPlanForGpu(): Unit = FileSourceScanExecShims.tagSupport(this)
 
   override def convertToCpu(): SparkPlan = {
     wrapped.copy(partitionFilters = partitionFilters)
