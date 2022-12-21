@@ -24,7 +24,7 @@ import org.apache.spark.sql.catalyst.expressions.FileSourceMetadataAttribute
 import org.apache.spark.sql.rapids.GpuFileSourceScanExec
 
 object ScanExecShims {
-  def tagSupport(meta: SparkPlanMeta[FileSourceScanExec]): Unit = {
+  def tagGpuFileSourceScanExecSupport(meta: SparkPlanMeta[FileSourceScanExec]): Unit = {
     if (meta.wrapped.expressions.exists {
       case FileSourceMetadataAttribute(_) => true
       case _ => false

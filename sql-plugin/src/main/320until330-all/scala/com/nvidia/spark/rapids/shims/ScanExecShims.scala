@@ -23,7 +23,7 @@ import org.apache.spark.sql.execution.datasources.v2.BatchScanExec
 import org.apache.spark.sql.rapids.GpuFileSourceScanExec
 
 object ScanExecShims {
-  def tagSupport(meta: SparkPlanMeta[FileSourceScanExec]): Unit =
+  def tagGpuFileSourceScanExecSupport(meta: SparkPlanMeta[FileSourceScanExec]): Unit =
     GpuFileSourceScanExec.tagSupport(meta)
 
   def execs: Map[Class[_ <: SparkPlan], ExecRule[_ <: SparkPlan]] = Seq(
