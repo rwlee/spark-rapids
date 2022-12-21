@@ -22,6 +22,7 @@ import org.apache.spark.sql.execution.FileSourceScanExec
 import org.apache.spark.sql.rapids.GpuFileSourceScanExec
 import org.apache.spark.sql.execution.datasources.v2.BatchScanExec
 import org.apache.spark.sql.execution.SparkPlan
+import org.apache.spark.sql.catalyst.expressions.FileSourceMetadataAttribute
 
 object FileSourceScanExecShims {
   def tagSupport(meta: SparkPlanMeta[FileSourceScanExec]): Unit = {
@@ -31,7 +32,7 @@ object FileSourceScanExecShims {
     }) {
       meta.willNotWorkOnGpu("hidden metadata columns are not supported on GPU")
     }
-    super.tagFileSourceScanExec(meta)
+    GpuFileSourceScanExec.tagSupport(meta)
   }
 
   def execs: Map[Class[_ <: SparkPlan], ExecRule[_ <: SparkPlan]] = Seq(
