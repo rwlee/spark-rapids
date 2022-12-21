@@ -99,26 +99,8 @@ trait Spark330PlusShims extends Spark321PlusShims with Spark320PlusNonDBShims {
   }
 
   // GPU support ANSI interval types from 330
-  override def getExecs: Map[Class[_ <: SparkPlan], ExecRule[_ <: SparkPlan]] = {
-    val map: Map[Class[_ <: SparkPlan], ExecRule[_ <: SparkPlan]] = Seq(
-      GpuOverrides.exec[BatchScanExec](
-        "The backend for most file input",
-        ExecChecks(
-          (TypeSig.commonCudfTypes + TypeSig.STRUCT + TypeSig.MAP + TypeSig.ARRAY +
-              TypeSig.DECIMAL_128 + TypeSig.BINARY +
-              GpuTypeShims.additionalCommonOperatorSupportedTypes).nested(),
-          TypeSig.all),
-        (p, conf, parent, r) => new BatchScanExecMeta(p, conf, parent, r)),
-      GpuOverrides.exec[FileSourceScanExec](
-        "Reading data from files, often from Hive tables",
-        ExecChecks((TypeSig.commonCudfTypes + TypeSig.NULL + TypeSig.STRUCT + TypeSig.MAP +
-            TypeSig.ARRAY + TypeSig.DECIMAL_128 + TypeSig.BINARY +
-            GpuTypeShims.additionalCommonOperatorSupportedTypes).nested(),
-          TypeSig.all),
-        (fsse, conf, p, r) => new FileSourceScanExecMeta(fsse, conf, p, r))
-    ).map(r => (r.getClassFor.asSubclass(classOf[SparkPlan]), r)).toMap
-    super.getExecs ++ map ++ PythonMapInArrowExecShims.execs
-  }
+  override def getExecs: Map[Class[_ <: SparkPlan], ExecRule[_ <: SparkPlan]] =
+    super.getExecs ++ DayTimeIntervalShims.execs ++ PythonMapInArrowExecShims.execs
 
 }
 

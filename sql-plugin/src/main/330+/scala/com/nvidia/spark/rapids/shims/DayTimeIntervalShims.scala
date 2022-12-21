@@ -93,4 +93,22 @@ object DayTimeIntervalShims {
           GpuDivideDTInterval(lhs, rhs)
       })
   ).map(r => (r.getClassFor.asSubclass(classOf[Expression]), r)).toMap
+
+  def execs: Map[Class[_ <: SparkPlan], ExecRule[_ <: SparkPlan]] = Seq(
+    GpuOverrides.exec[BatchScanExec](
+      "The backend for most file input",
+      ExecChecks(
+        (TypeSig.commonCudfTypes + TypeSig.STRUCT + TypeSig.MAP + TypeSig.ARRAY +
+            TypeSig.DECIMAL_128 + TypeSig.BINARY +
+            GpuTypeShims.additionalCommonOperatorSupportedTypes).nested(),
+        TypeSig.all),
+      (p, conf, parent, r) => new BatchScanExecMeta(p, conf, parent, r)),
+    GpuOverrides.exec[FileSourceScanExec](
+      "Reading data from files, often from Hive tables",
+      ExecChecks((TypeSig.commonCudfTypes + TypeSig.NULL + TypeSig.STRUCT + TypeSig.MAP +
+          TypeSig.ARRAY + TypeSig.DECIMAL_128 + TypeSig.BINARY +
+          GpuTypeShims.additionalCommonOperatorSupportedTypes).nested(),
+        TypeSig.all),
+      (fsse, conf, p, r) => new FileSourceScanExecMeta(fsse, conf, p, r))
+  ).map(r => (r.getClassFor.asSubclass(classOf[SparkPlan]), r)).toMap
 }
