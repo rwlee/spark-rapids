@@ -26,6 +26,7 @@ import org.apache.spark.sql.catalyst.expressions._
 import org.apache.spark.sql.execution.{FileSourceScanExec, SparkPlan}
 import org.apache.spark.sql.execution.datasources.{DataSourceUtils, FilePartition, FileScanRDD, PartitionedFile}
 import org.apache.spark.sql.execution.datasources.parquet.ParquetFilters
+import org.apache.spark.sql.execution.datasources.v2.BatchScanExec
 import org.apache.spark.sql.rapids.shims.{GpuDivideYMInterval, GpuMultiplyYMInterval}
 import org.apache.spark.sql.types.StructType
 
@@ -59,7 +60,7 @@ trait Spark330PlusShims extends Spark321PlusShims with Spark320PlusNonDBShims {
   }
 
   // GPU support ANSI interval types from 330
-  override d  ef getExprs: Map[Class[_ <: Expression], ExprRule[_ <: Expression]] = {
+  override def getExprs: Map[Class[_ <: Expression], ExprRule[_ <: Expression]] = {
     val map: Map[Class[_ <: Expression], ExprRule[_ <: Expression]] = Seq(
       GpuOverrides.expr[MultiplyYMInterval](
         "Year-month interval * number",
