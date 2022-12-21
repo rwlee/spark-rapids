@@ -21,10 +21,7 @@ import com.nvidia.spark.rapids._
 import org.apache.spark.sql.catalyst.expressions.DynamicPruningExpression
 import org.apache.spark.sql.execution._
 import org.apache.spark.sql.execution.datasources.{HadoopFsRelation, InMemoryFileIndex}
-import org.apache.spark.sql.execution.datasources.json.JsonFileFormat
-import org.apache.spark.sql.execution.exchange.ReusedExchangeExec
 import org.apache.spark.sql.rapids.GpuFileSourceScanExec
-import org.apache.spark.sql.rapids.execution.{GpuBroadcastExchangeExec, GpuSubqueryBroadcastExec}
 
 class FileSourceScanExecMeta(plan: FileSourceScanExec,
     conf: RapidsConf,
