@@ -21,6 +21,7 @@ import com.nvidia.spark.rapids._
 import org.apache.spark.sql.execution.FileSourceScanExec
 import org.apache.spark.sql.rapids.GpuFileSourceScanExec
 import org.apache.spark.sql.execution.datasources.v2.BatchScanExec
+import org.apache.spark.sql.execution.SparkPlan
 
 object FileSourceScanExecShims {
   def tagSupport(meta: SparkPlanMeta[FileSourceScanExec]): Unit = {
