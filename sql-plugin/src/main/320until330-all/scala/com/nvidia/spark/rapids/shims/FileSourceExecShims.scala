@@ -16,17 +16,12 @@
 
 package com.nvidia.spark.rapids.shims
 
+import com.nvidia.spark.rapids._
+
 import org.apache.spark.sql.execution.FileSourceScanExec
 import org.apache.spark.sql.rapids.GpuFileSourceScanExec
 
 object FileSourceScanExecShims {
-  def tagSupport(meta: SparkPlanMeta[FileSourceScanExec]): Unit = {
-    if (meta.wrapped.expressions.exists {
-      case FileSourceMetadataAttribute(_) => true
-      case _ => false
-    }) {
-      meta.willNotWorkOnGpu("hidden metadata columns are not supported on GPU")
-    }
+  def tagSupport(meta: SparkPlanMeta[FileSourceScanExec]): Unit =
     GpuFileSourceScanExec.tagSupport(meta)
-  }
 }

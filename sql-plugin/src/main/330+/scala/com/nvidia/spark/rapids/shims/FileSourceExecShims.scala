@@ -16,10 +16,38 @@
 
 package com.nvidia.spark.rapids.shims
 
+import com.nvidia.spark.rapids._
+
 import org.apache.spark.sql.execution.FileSourceScanExec
 import org.apache.spark.sql.rapids.GpuFileSourceScanExec
+import org.apache.spark.sql.execution.datasources.v2.BatchScanExec
 
 object FileSourceScanExecShims {
-  def tagSupport(meta: SparkPlanMeta[FileSourceScanExec]): Unit =
-    GpuFileSourceScanExec.tagSupport(meta)
+  def tagSupport(meta: SparkPlanMeta[FileSourceScanExec]): Unit = {
+    if (meta.wrapped.expressions.exists {
+      case FileSourceMetadataAttribute(_) => true
+      case _ => false
+    }) {
+      meta.willNotWorkOnGpu("hidden metadata columns are not supported on GPU")
+    }
+    super.tagFileSourceScanExec(meta)
+  }
+
+  def execs: Map[Class[_ <: SparkPlan], ExecRule[_ <: SparkPlan]] = Seq(
+    GpuOverrides.exec[BatchScanExec](
+      "The backend for most file input",
+      ExecChecks(
+        (TypeSig.commonCudfTypes + TypeSig.STRUCT + TypeSig.MAP + TypeSig.ARRAY +
+            TypeSig.DECIMAL_128 + TypeSig.BINARY +
+            GpuTypeShims.additionalCommonOperatorSupportedTypes).nested(),
+        TypeSig.all),
+      (p, conf, parent, r) => new BatchScanExecMeta(p, conf, parent, r)),
+    GpuOverrides.exec[FileSourceScanExec](
+      "Reading data from files, often from Hive tables",
+      ExecChecks((TypeSig.commonCudfTypes + TypeSig.NULL + TypeSig.STRUCT + TypeSig.MAP +
+          TypeSig.ARRAY + TypeSig.DECIMAL_128 + TypeSig.BINARY +
+          GpuTypeShims.additionalCommonOperatorSupportedTypes).nested(),
+        TypeSig.all),
+      (fsse, conf, p, r) => new FileSourceScanExecMeta(fsse, conf, p, r))
+  ).map(r => (r.getClassFor.asSubclass(classOf[SparkPlan]), r)).toMap
 }
