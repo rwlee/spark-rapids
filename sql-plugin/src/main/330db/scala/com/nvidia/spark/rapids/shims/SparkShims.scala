@@ -49,7 +49,7 @@ object SparkShimImpl extends Spark321PlusDBShims {
     super.getExprs ++ DayTimeIntervalShims.exprs ++ RoundingShims.exprs
 
   override def getExecs: Map[Class[_ <: SparkPlan], ExecRule[_ <: SparkPlan]] =
-    super.getExecs ++ FileSourceScanExecShims.execs ++ PythonMapInArrowExecShims.execs
+    super.getExecs ++ ScanExecShims.execs ++ PythonMapInArrowExecShims.execs
 }
 
 trait ShimGetArrayStructFields extends ExtractValue {

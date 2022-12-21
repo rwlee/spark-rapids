@@ -62,7 +62,7 @@ class FileSourceScanExecMeta(plan: FileSourceScanExec,
   // partition filters and data filters are not run on the GPU
   override val childExprs: Seq[ExprMeta[_]] = Seq.empty
 
-  override def tagPlanForGpu(): Unit = FileSourceScanExecShims.tagSupport(this)
+  override def tagPlanForGpu(): Unit = ScanExecShims.tagGpuFileSourceScanExecSupport(this)
 
   override def convertToCpu(): SparkPlan = {
     wrapped.copy(partitionFilters = partitionFilters)

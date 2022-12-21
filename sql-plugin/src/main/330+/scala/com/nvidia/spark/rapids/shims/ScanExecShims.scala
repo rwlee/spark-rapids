@@ -18,13 +18,12 @@ package com.nvidia.spark.rapids.shims
 
 import com.nvidia.spark.rapids._
 
-import org.apache.spark.sql.execution.FileSourceScanExec
-import org.apache.spark.sql.rapids.GpuFileSourceScanExec
+import org.apache.spark.sql.execution.{FileSourceScanExec, SparkPlan}
 import org.apache.spark.sql.execution.datasources.v2.BatchScanExec
-import org.apache.spark.sql.execution.SparkPlan
 import org.apache.spark.sql.catalyst.expressions.FileSourceMetadataAttribute
+import org.apache.spark.sql.rapids.GpuFileSourceScanExec
 
-object FileSourceScanExecShims {
+object ScanExecShims {
   def tagSupport(meta: SparkPlanMeta[FileSourceScanExec]): Unit = {
     if (meta.wrapped.expressions.exists {
       case FileSourceMetadataAttribute(_) => true
@@ -40,13 +39,14 @@ object FileSourceScanExecShims {
       "The backend for most file input",
       ExecChecks(
         (TypeSig.commonCudfTypes + TypeSig.STRUCT + TypeSig.MAP + TypeSig.ARRAY +
-            TypeSig.DECIMAL_128 + TypeSig.BINARY +
-            GpuTypeShims.additionalCommonOperatorSupportedTypes).nested(),
+          TypeSig.DECIMAL_128 + TypeSig.BINARY +
+          GpuTypeShims.additionalCommonOperatorSupportedTypes).nested(),
         TypeSig.all),
       (p, conf, parent, r) => new BatchScanExecMeta(p, conf, parent, r)),
     GpuOverrides.exec[FileSourceScanExec](
       "Reading data from files, often from Hive tables",
-      ExecChecks((TypeSig.commonCudfTypes + TypeSig.NULL + TypeSig.STRUCT + TypeSig.MAP +
+      ExecChecks(
+        (TypeSig.commonCudfTypes + TypeSig.NULL + TypeSig.STRUCT + TypeSig.MAP +
           TypeSig.ARRAY + TypeSig.DECIMAL_128 + TypeSig.BINARY +
           GpuTypeShims.additionalCommonOperatorSupportedTypes).nested(),
         TypeSig.all),

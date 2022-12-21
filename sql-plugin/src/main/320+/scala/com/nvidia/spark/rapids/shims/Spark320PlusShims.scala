@@ -234,7 +234,7 @@ trait Spark320PlusShims extends SparkShims with RebaseShims with Logging {
   ).map(r => (r.getClassFor.asSubclass(classOf[Expression]), r)).toMap
 
   override def getExecs: Map[Class[_ <: SparkPlan], ExecRule[_ <: SparkPlan]] = {
-    Seq(
+    val maps: Seq(
       GpuOverrides.exec[WindowInPandasExec](
         "The backend for Window Aggregation Pandas UDF, Accelerates the data transfer between" +
           " the Java process and the Python process. It also supports scheduling GPU resources" +
@@ -255,20 +255,9 @@ trait Spark320PlusShims extends SparkShims with RebaseShims with Logging {
               childPlans.head.convertIfNeeded()
             )(winPy.partitionSpec)
           }
-        }).disabledByDefault("it only supports row based frame for now"),
-      GpuOverrides.exec[FileSourceScanExec](
-        "Reading data from files, often from Hive tables",
-        ExecChecks((TypeSig.commonCudfTypes + TypeSig.NULL + TypeSig.STRUCT + TypeSig.MAP +
-          TypeSig.ARRAY + TypeSig.BINARY + TypeSig.DECIMAL_128).nested(), TypeSig.all),
-        (fsse, conf, p, r) => new FileSourceScanExecMeta(fsse, conf, p, r)),
-      GpuOverrides.exec[BatchScanExec](
-        "The backend for most file input",
-        ExecChecks(
-          (TypeSig.commonCudfTypes + TypeSig.STRUCT + TypeSig.MAP + TypeSig.ARRAY +
-            TypeSig.DECIMAL_128 + TypeSig.BINARY).nested(),
-          TypeSig.all),
-        (p, conf, parent, r) => new BatchScanExecMeta(p, conf, parent, r))
+        }).disabledByDefault("it only supports row based frame for now")
     ).map(r => (r.getClassFor.asSubclass(classOf[SparkPlan]), r)).toMap
+    maps ++ ScanExecShims.execs
   }
 
   override def getScans: Map[Class[_ <: Scan], ScanRule[_ <: Scan]] = Seq(
