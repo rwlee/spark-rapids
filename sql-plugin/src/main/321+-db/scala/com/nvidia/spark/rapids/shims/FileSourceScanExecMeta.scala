@@ -102,7 +102,7 @@ class FileSourceScanExecMeta(plan: FileSourceScanExec,
       this.entirePlanWillNotWork("Plans that read Delta Index JSON files can not run " +
           "any part of the plan on the GPU!")
     }
-    GpuFileSourceScanExec.tagSupport(this)
+    ScanExecShims.tagGpuFileSourceScanExecSupport(this)
   }
 
   override def convertToCpu(): SparkPlan = {
