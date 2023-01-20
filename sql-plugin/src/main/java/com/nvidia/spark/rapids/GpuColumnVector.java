@@ -517,7 +517,6 @@ public class GpuColumnVector extends GpuColumnVectorBase {
     } else if (type instanceof StructType) {
       return DType.STRUCT;
     } else if (type instanceof BinaryType) {
-      // FIXME: this should not be here, we should be able remove or throw
       return DType.LIST;
     } else {
       return getNonNestedRapidsType(type);
@@ -863,6 +862,8 @@ public class GpuColumnVector extends GpuColumnVectorBase {
       StructType structType = (StructType) sparkType;
       sb.append(structType.iterator().map(f -> buildColumnTypeString(f.dataType()))
           .mkString("STRUCT(", ",", ")"));
+    } else if (sparkType instanceof BinaryType) {
+      return "BINARY";
     } else {
       throw new IllegalArgumentException("Unexpected data type: " + sparkType);
     }
