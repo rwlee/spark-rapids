@@ -496,9 +496,6 @@ public class GpuColumnVector extends GpuColumnVectorBase {
       return DType.TIMESTAMP_MICROSECONDS;
     } else if (type instanceof StringType) {
       return DType.STRING;
-    } else if (type instanceof BinaryType) {
-      // FIXME: this should not be here, we should be able remove or throw
-      return DType.LIST;
     } else if (type instanceof NullType) {
       // INT8 is used for both in this case
       return DType.INT8;
@@ -519,6 +516,9 @@ public class GpuColumnVector extends GpuColumnVectorBase {
       return DType.LIST;
     } else if (type instanceof StructType) {
       return DType.STRUCT;
+    } else if (type instanceof BinaryType) {
+      // FIXME: this should not be here, we should be able remove or throw
+      return DType.LIST;
     } else {
       return getNonNestedRapidsType(type);
     }
