@@ -61,6 +61,22 @@ class CsvScanSuite extends SparkQueryCompareTestSuite {
     frame => frame.select(col("*"))
   }
 
+  ALLOW_NON_GPU_testSparkResultsAreEqual("Test CSV inferred schema default preferDate = false",
+    timestampsFromDatesCsvInferredSchema, Seq("FileSourceScanExec", "FilterExec", "CollectLimitExec",
+      "GreaterThan", "Length", "StringTrim", "LocalTableScanExec", "DeserializeToObjectExec",
+      "Invoke", "AttributeReference", "Literal"),
+    conf = new SparkConf()) {
+    frame => frame.select(col("*"))
+  }
+
+  ALLOW_NON_GPU_testSparkResultsAreEqual("Test CSV inferred schema with preferDate = true",
+    datesPreferredFromCsvInferredSchema, Seq("FileSourceScanExec", "FilterExec", "CollectLimitExec",
+      "GreaterThan", "Length", "StringTrim", "LocalTableScanExec", "DeserializeToObjectExec",
+      "Invoke", "AttributeReference", "Literal"),
+    conf = new SparkConf()) {
+    frame => frame.select(col("*"))
+  }
+
   testSparkResultsAreEqual(
     "Test CSV parse dates",
     datesCsvDf,

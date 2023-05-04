@@ -1886,6 +1886,16 @@ trait SparkQueryCompareTestSuite extends FunSuite {
     session.read.option("inferSchema", "true").csv(path)
   }
 
+  def timestampsFromDatesCsvInferredSchema(session: SparkSession): DataFrame = {
+    val path = TestResourceFinder.getResourcePath("dates.csv")
+    session.read.option("inferSchema", "true").option("preferDate", "false").csv(path)
+  }
+
+  def datesPreferredFromCsvInferredSchema(session: SparkSession): DataFrame = {
+    val path = TestResourceFinder.getResourcePath("dates.csv")
+    session.read.option("inferSchema", "true").csv(path)
+  }
+
   def nullableFloatCsvDf = {
     fromCsvDf("nullable_floats.csv", StructType(Array(
       StructField("floats", FloatType, true),
